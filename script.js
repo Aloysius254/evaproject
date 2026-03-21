@@ -142,30 +142,6 @@ window.addEventListener("load", () => {
   }
 });
 
-const CACHE_NAME = "love-app-v1";
-const urlsToCache = [
-  "/evaproject/",
-  "/evaproject/index.html",
-  "/evaproject/style.css",
-  "/evaproject/script.js"
-];
-
-self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
-    })
-  );
-});
-
-self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
-  );
-});
-
 let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', (e) => {

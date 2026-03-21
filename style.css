@@ -15,7 +15,9 @@ text-align:center;
 overflow-x:hidden;
 padding-top:70px;
 }
-
+h1, h2, h3, p{
+margin:10px 0;
+}
 /* NAVBAR (UPGRADED) */
 nav{
 position:fixed;
@@ -71,6 +73,8 @@ color:#ff4b7d;
 height:50vh;          /* 🔥 reduce height */
 overflow:hidden;
 display:flex;
+  margin-top:0;
+padding-top:0;
 align-items:center;
 justify-content:center;
 }
@@ -85,8 +89,8 @@ display:block;
 
 /* SECTION GENERAL */
 section{
-padding:100px 20px;
-margin-top:0;
+padding:40px 15px;
+margin-top:20px;
 }
 
 /* STORY TIMELINE (FIXED) */
@@ -403,17 +407,25 @@ gap:10px;
 nav a{
 font-size:14px;
 }
+
+section{
+padding:30px 10px;
+margin-top:10px;
+}
+  
   .hero-banner{
 height:60vh;   /* smaller for phone */
 }
 .hero-banner img{
   height:100px;
+  height:100%;
+object-fit:contain;
 }
 
   #site-rating{
 position: static;   /* 🔥 VERY IMPORTANT */
 width: 90%;
-margin: 20px auto;
+margin: 15px auto;
 top: auto;
 right: auto;
 }

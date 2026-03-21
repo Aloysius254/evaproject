@@ -69,13 +69,10 @@ color:#ff4b7d;
 /* HERO IMAGE (TOP IMAGE FIX) */
 .hero-banner img{
 width:100%;
-height:600px;
+height:70vh;   /* responsive height */
 object-fit:cover;
 display:block;
-margin-top:-70px;
-padding-top:0;
 }
-
 
 
 /* SECTION GENERAL */
@@ -293,13 +290,13 @@ cursor:pointer;
 
 #site-rating {
   position: fixed;
-  top: 90px;
-  right: 20px;
-  width: 260px;
+  top: 80px;
+  right: 15px;
+  width: 240px;
   background: rgba(0,0,0,0.6);
   padding: 12px;
   border-radius: 15px;
-  z-index: 2000;
+  z-index: 1000;
 }
 
 #site-rating h2 {
@@ -385,15 +382,32 @@ opacity:0.7;
 /* MOBILE */
 @media(max-width:768px){
 
+nav{
+padding:10px;
+}
+  
 nav ul{
-flex-direction:column;
+flex-direction:row;
+justify-content:space-around;
 gap:10px;
 }
 
+nav a{
+font-size:14px;
+}
+  
 .hero-banner img{
-height:200px;
+  height:40vh;
 }
 
+  #site-rating{
+position: static;   /* 🔥 VERY IMPORTANT */
+width: 90%;
+margin: 20px auto;
+top: auto;
+right: auto;
+}
+  
 .story-card{
 width:90%;
 }

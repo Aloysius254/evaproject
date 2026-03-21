@@ -411,12 +411,16 @@ font-size:14px;
 padding-top:55px;
 }
   .hero-banner{
-height:30vh;   /* smaller for phone */
+    height:25vh;   /* smaller and clean */
+    margin:0;
+    padding:0;
 }
+
 .hero-banner img{
-  height:100px;
-  height:100%;
-object-fit:contain;
+    width:100%;
+    height:100%;
+    object-fit:cover;   /* 🔥 KEY FIX */
+    display:block;
 }
 section{
 padding:20px 10px;

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Eva ❤️ My Love</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff4b7d">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <ul>
+    <li><a href="#" onclick="showSection('home')">Home</a></li>
+    <li><a href="#" onclick="showSection('story')">Our Story</a></li>
+    <li><a href="#" onclick="showSection('memories')">Memories</a></li>
+  </ul>
+</nav>
+
+<!-- ⭐ FLOATING RATING (PUT HERE) -->
+<section id="site-rating">
+  <h2>Rate Our Love Story 💕</h2>
+  <p class="rating-text">How beautiful is our love story? ❤️</p>
+
+  <div class="rating-stars">
+    <span onclick="rateSite(1)">❤️</span>
+    <span onclick="rateSite(2)">❤️</span>
+    <span onclick="rateSite(3)">❤️</span>
+    <span onclick="rateSite(4)">❤️</span>
+    <span onclick="rateSite(5)">❤️</span>
+  </div>
+
+  <p id="ratingResult"></p>
+</section>
+
+
+<!-- MUSIC -->
+<audio id="bgMusic" loop>
+  <source src="music/love.mp3" type="audio/mpeg">
+</audio>
+<button onclick="toggleMusic()" id="musicBtn">🎵 Play Music</button>
+
+<!-- HOME SECTION -->
+<section id="home" class="hero fade-in">
+  <div class="hero-banner">
+    <img src="images/love-banner.jpg" alt="Love Banner">
+  </div>
+  <section class="content">
+    <h1>True love stories of real people</h1>
+    <p>Our love is a beautiful journey filled with unforgettable memories, laughter, and moments that mean everything ❤️</p>
+  </section>
+
+
+
+  <p class="love-message">
+    Eva ❤️, from the moment you came into my life,<br>
+    everything changed in the most beautiful way.<br>
+    You are my peace in chaos, my happiness in every moment,<br>
+    and the reason my heart smiles every single day.<br>
+    Loving you is not just a feeling, <br>
+    ’s a promise I make to you every day—to stand by you,<br>
+    to care for you, and to choose you over and over again.<br>
+    No matter where life takes us, just know that my heart belongs to you, <br>
+    now and forever 💕
+  </p>
+
+  <h1>❤️ Alovea💓, My Love ❤️</h1>
+  <p id="counter"></p>
+  <button onclick="showPopup()">Click Me 💌</button>
+</section>
+
+<!-- STORY SECTION -->
+<section id="story" style="display:none;">
+  <h2>Our Story ❤️</h2>
+  <div class="story-timeline">
+    <div class="story-point">
+      <h3>First Meeting 🌸</h3>
+      <p>The day we met, I knew my life had changed forever. Your smile stole my heart.</p>
+    </div>
+    <div class="story-point">
+      <h3>First Date 🌅</h3>
+      <p>Walking on the beach together, holding hands, laughing under the sunset.</p>
+    </div>
+    <div class="story-point">
+      <h3>Movie Night 🍿</h3>
+      <p>Cuddling on the couch, sharing popcorn, and creating memories that last forever.</p>
+    </div>
+    <div class="story-point">
+      <h3>Forever ❤️</h3>
+      <p>Every day with you is my favorite day. Thank you for being mine.</p>
+    </div>
+  </div>
+
+<div class="story-paragraph">
+  <p>
+    Our journey together has been a tapestry of beautiful moments, laughter, challenges, and growth.
+    Every step we’ve taken, hand in hand, has strengthened the love we share.
+    Through sunny days and stormy nights, our bond has been unwavering.
+    You are my best friend, my confidant, and the love of my life.
+    Each memory we create becomes a treasure I hold close to my heart,
+    reminding me every day why I choose you, over and over again.
+    Your smile, your laughter, and your presence brighten every corner of my life.<br>
+    I am grateful for you today, tomorrow, and always ❤️
+  </p>
+</div>
+
+  <button onclick="showPopup()" class="heart-btn">💖 Surprise Message</button>
+</section>
+
+<!-- MEMORIES SECTION -->
+<section id="memories" style="display:none;">
+
+  <h2>Our Memories 📸</h2>
+   <p class="memories-subtitle">
+    Each photo tells the story of our love, laughter, and unforgettable moments together 💕
+  </p>
+  <div class="gallery">
+    <div class="story-card"><img src="images/favorite9.jpg" onclick="openLightbox(this)"><p>Our first adventure together 🌄❤️</p></div>
+    <div class="story-card"><img src="images/favorite3.jpg" onclick="openLightbox(this)"><p>Movie night cuddles 🍿🥰</p></div>
+    <div class="story-card"><img src="images/favorite12.jpg" onclick="openLightbox(this)"><p>Beach sunset 🌅 with you</p></div>
+    <div class="story-card"><img src="images/favorite4.jpg" onclick="openLightbox(this)"><p>Laughing together 😂❤️</p></div>
+    <div class="story-card"><img src="images/favorite10.jpg" onclick="openLightbox(this)"><p>Our special day 💕</p></div>
+    <div class="story-card"><img src="images/favorite13.jpg" onclick="openLightbox(this)"><p>Moments I’ll never forget 🥰</p></div>
+    <div class="story-card"><img src="images/favorite5.jpg" onclick="openLightbox(this)"><p>Another beautiful memory ❤️</p></div>
+    <div class="story-card"><img src="images/favorite9.jpg" onclick="openLightbox(this)"><p>Moments with you are priceless 💕</p></div>
+
+    <div class="story-card"><img src="images/favorite6.jpg" onclick="openLightbox(this)"><p>Our first adventure together 🌄❤️</p></div>
+    <div class="story-card"><img src="images/favorite2.jpg" onclick="openLightbox(this)"><p>Movie night cuddles 🍿🥰</p></div>
+    <div class="story-card"><img src="images/favorite12.jpg" onclick="openLightbox(this)"><p>Beach sunset 🌅 with you</p></div>
+    <div class="story-card"><img src="images/favorite7.jpg" onclick="openLightbox(this)"><p>Laughing together 😂❤️</p></div>
+    <div class="story-card"><img src="images/favorite4.jpg" onclick="openLightbox(this)"><p>Our special day 💕</p></div>
+    <div class="story-card"><img src="images/favorite3.jpg" onclick="openLightbox(this)"><p>Moments I’ll never forget 🥰</p></div>
+    <div class="story-card"><img src="images/favorite5.jpg" onclick="openLightbox(this)"><p>Another beautiful memory ❤️</p></div>
+    <div class="story-card"><img src="images/favorite1.jpg" onclick="openLightbox(this)"><p>Moments with you are priceless 💕</p></div>
+  </div>
+</section>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" class="lightbox">
+  <span class="close" onclick="closeLightbox()">✖</span>
+  <img id="lightbox-img">
+  <div class="controls">
+    <button onclick="prevImage()">⟨</button>
+    <button onclick="nextImage()">⟩</button>
+  </div>
+</div>
+
+<!-- COMMENTS -->
+<section id="comments">
+  <h2>Leave a Comment 💌</h2>
+  <form id="commentForm">
+    <input type="text" id="name" placeholder="Your Name" required>
+    <textarea id="comment" placeholder="Your Comment" required></textarea>
+    <button type="submit">Send</button>
+  </form>
+  <div id="commentList"></div>
+</section>
+
+<!-- POPUP -->
+<div id="popup" class="popup">
+  <p>Alovea💓 ❤️ You are my everything. I love you forever 💕</p>
+  <button onclick="closePopup()">Close</button>
+</div>
+
+
+
+<script src="script.js"></script>
+
+</body>
+</html>

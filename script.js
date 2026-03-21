@@ -165,3 +165,31 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  // Show your install button
+  const installBtn = document.createElement("button");
+  installBtn.innerText = "Install App ❤️";
+  installBtn.style.position = "fixed";
+  installBtn.style.bottom = "20px";
+  installBtn.style.right = "20px";
+  installBtn.style.padding = "10px 20px";
+  installBtn.style.background = "#ff4b7d";
+  installBtn.style.color = "white";
+  installBtn.style.border = "none";
+  installBtn.style.borderRadius = "20px";
+
+  document.body.appendChild(installBtn);
+
+  installBtn.addEventListener("click", () => {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+    });
+  });
+});

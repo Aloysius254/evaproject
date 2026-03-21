@@ -2,7 +2,7 @@
   "name": "Eva ❤️ My Love",
   "short_name": "Alovea 💕",
   "start_url":"/evaproject/index.html",
-  "scope": "/evaproject/"
+  "scope": "/evaproject/",
   "display": "standalone",
   "background_color": "#ff758c",
   "theme_color": "#ff4b7d",

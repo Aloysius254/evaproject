@@ -411,7 +411,7 @@ font-size:14px;
 padding-top:55px;
 }
   .hero-banner{
-    height:25vh;   /* smaller and clean */
+    height:15vh;   /* smaller and clean */
     margin:0;
     padding:0;
 }
@@ -423,7 +423,7 @@ padding-top:55px;
     display:block;
 }
 section{
-padding:20px 10px;
+padding:10px 10px;
 }
   #site-rating{
 position: static;   /* 🔥 VERY IMPORTANT */

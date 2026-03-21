@@ -404,7 +404,7 @@ nav a{
 font-size:14px;
 }
   .hero-banner{
-height:30vh;   /* smaller for phone */
+height:60vh;   /* smaller for phone */
 }
 .hero-banner img{
   height:100px;

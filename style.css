@@ -407,16 +407,20 @@ gap:10px;
 nav a{
 font-size:14px;
 }
- 
+ body{
+padding-top:55px;
+}
   .hero-banner{
-height:10vh;   /* smaller for phone */
+height:30vh;   /* smaller for phone */
 }
 .hero-banner img{
   height:100px;
   height:100%;
 object-fit:contain;
 }
-
+section{
+padding:20px 10px;
+}
   #site-rating{
 position: static;   /* 🔥 VERY IMPORTANT */
 width: 90%;

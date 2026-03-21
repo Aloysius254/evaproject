@@ -386,6 +386,33 @@ animation:float 6s linear infinite;
 opacity:0.7;
 }
 
+#game{
+padding:100px 20px;
+text-align:center;
+}
+
+.game-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:15px;
+max-width:320px;
+margin:20px auto;
+}
+
+.box{
+background:#ff4b7d;
+padding:25px;
+font-size:30px;
+border-radius:12px;
+cursor:pointer;
+transition:0.3s;
+}
+
+.box:hover{
+transform:scale(1.1);
+background:#ff758c;
+}
+
 @keyframes float{
 0%{transform:translateY(0);}
 100%{transform:translateY(-1000px);}

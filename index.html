@@ -31,6 +31,7 @@ gtag('config', 'G-Z4F89D35GQ');
     <li><a href="#" onclick="showSection('home')">Home</a></li>
     <li><a href="#" onclick="showSection('story')">Our Story</a></li>
     <li><a href="#" onclick="showSection('memories')">Memories</a></li>
+    <li><a href="#" onclick="showSection('game')">Love Game 💘</a></li>
   </ul>
 </nav>
 
@@ -162,6 +163,49 @@ gtag('config', 'G-Z4F89D35GQ');
   </div>
 </div>
 
+<!-- LOVE GAME SECTION -->
+<section id="game" style="display:none;">
+
+<h2>💘 Our Love Game 💘</h2>
+
+<!-- LEVEL 1 -->
+<div id="level1">
+  <h3>Level 1: Find My Heart ❤️</h3>
+  <div class="game-grid">
+    <div class="box" onclick="checkHeart(this)">❤️</div>
+    <div class="box" onclick="checkHeart(this)">❤️</div>
+    <div class="box" onclick="checkHeart(this)">❤️</div>
+    <div class="box" onclick="checkHeart(this)">❤️</div>
+    <div class="box" onclick="checkHeart(this)">❤️</div>
+    <div class="box" onclick="checkHeart(this)">❤️</div>
+  </div>
+</div>
+
+<!-- LEVEL 2 -->
+<div id="level2" style="display:none;">
+  <h3>Level 2: How Well Do You Know Us? 💞</h3>
+  <button onclick="startQuiz()">Start Quiz 💖</button>
+</div>
+
+<!-- LEVEL 3 -->
+<div id="level3" style="display:none;">
+  <h3>Level 3: Match Our Memories 📸</h3>
+  <div class="game-grid">
+    <div class="box" onclick="flipCard(this)">💌</div>
+    <div class="box" onclick="flipCard(this)">💌</div>
+    <div class="box" onclick="flipCard(this)">💌</div>
+    <div class="box" onclick="flipCard(this)">💌</div>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div id="final" style="display:none;">
+  <h2>💍 You Win My Heart Forever 💍</h2>
+  <p>Eva ❤️ you didn’t just complete the game… you completed my life 💞</p>
+</div>
+
+</section>
+  
 <!-- COMMENTS -->
 <section id="comments">
   <h2>Leave a Comment 💌</h2>

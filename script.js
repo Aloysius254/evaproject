@@ -1,7 +1,10 @@
 // SECTION SWITCHING
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/evaproject/service-worker.js')
-    .then(() => console.log("Service Worker Registered"));
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/evaproject/service-worker.js')
+      .then(reg => console.log("Service Worker Registered ✅", reg))
+      .catch(err => console.log("Service Worker Failed ❌", err));
+  });
 }
 
 function showSection(id){
@@ -169,3 +172,11 @@ window.addEventListener('beforeinstallprompt', (e) => {
     });
   });
 });
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/evaproject/service-worker.js')
+      .then(reg => console.log("Service Worker Registered ✅", reg))
+      .catch(err => console.log("Service Worker Failed ❌", err));
+  });
+}

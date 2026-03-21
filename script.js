@@ -1,6 +1,6 @@
 // SECTION SWITCHING
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js')
+  navigator.serviceWorker.register('/evaproject/service-worker.js')
     .then(() => console.log("Service Worker Registered"));
 }
 

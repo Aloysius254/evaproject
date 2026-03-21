@@ -1,7 +1,7 @@
 {
   "name": "Eva ❤️ My Love",
   "short_name": "Alovea 💕",
-  "start_url": "index.html",
+  "start_url":"/evaproject/index.html",
   "display": "standalone",
   "background_color": "#ff758c",
   "theme_color": "#ff4b7d",

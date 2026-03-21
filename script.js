@@ -180,3 +180,10 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.log("Service Worker Failed ❌", err));
   });
 }
+
+window.addEventListener('appinstalled', () => {
+  gtag('event', 'app_installed', {
+    event_category: 'PWA',
+    event_label: 'Love App'
+  });
+});

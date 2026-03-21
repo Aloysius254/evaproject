@@ -409,7 +409,7 @@ font-size:14px;
 }
  
   .hero-banner{
-height:60vh;   /* smaller for phone */
+height:10vh;   /* smaller for phone */
 }
 .hero-banner img{
   height:100px;

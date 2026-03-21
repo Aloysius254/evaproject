@@ -173,6 +173,61 @@ window.addEventListener('beforeinstallprompt', (e) => {
   });
 });
 
+// LEVEL 1
+let lucky = Math.floor(Math.random()*6);
+
+function checkHeart(el){
+  let boxes = document.querySelectorAll("#level1 .box");
+  let index = Array.from(boxes).indexOf(el);
+
+  if(index === lucky){
+    el.innerHTML = "💖";
+    alert("You found my heart ❤️");
+
+    document.getElementById("level1").style.display="none";
+    document.getElementById("level2").style.display="block";
+  } else {
+    el.innerHTML = "💔";
+  }
+}
+
+// LEVEL 2
+function startQuiz(){
+  let q1 = prompt("Where did we first meet?");
+  
+  if(q1 && q1.toLowerCase() === "school"){
+    alert("Correct ❤️");
+
+    document.getElementById("level2").style.display="none";
+    document.getElementById("level3").style.display="block";
+  } else {
+    alert("Try again my love 💕");
+  }
+}
+
+// LEVEL 3
+let firstCard = null;
+
+function flipCard(el){
+  el.innerHTML = "❤️";
+
+  if(!firstCard){
+    firstCard = el;
+  } else {
+    setTimeout(()=>{
+      firstCard.innerHTML="💌";
+      el.innerHTML="💌";
+      firstCard = null;
+
+      document.getElementById("level3").style.display="none";
+      document.getElementById("final").style.display="block";
+
+      startHearts(); // shared effect
+      toggleMusic(); // shared music
+    },1000);
+  }
+}
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/evaproject/service-worker.js')

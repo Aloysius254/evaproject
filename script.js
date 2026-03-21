@@ -144,10 +144,10 @@ window.addEventListener("load", () => {
 
 const CACHE_NAME = "love-app-v1";
 const urlsToCache = [
-  "/",
-  "/index1.html",
-  "/style.css",
-  "/script1.js"
+  "/evaproject/",
+  "/evaproject/index.html",
+  "/evaproject/style.css",
+  "/evaproject/script.js"
 ];
 
 self.addEventListener("install", event => {

@@ -7,9 +7,18 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+function handleRatingVisibility(currentSection){
+  const rating = document.getElementById("site-rating");
+
+  if(window.innerWidth <= 768){
+    rating.style.display = (currentSection === "game") ? "block" : "none";
+  } else {
+    rating.style.display = "block";
+  }
+}
+
 function showSection(id){
   const sections = document.querySelectorAll("section");
-  const rating = document.getElementById("site-rating");
 
   sections.forEach(sec => {
     if(sec.id !== "site-rating"){
@@ -19,24 +28,12 @@ function showSection(id){
 
   document.getElementById(id).style.display = "block";
 
-  // 👇 DETECT PHONE
-  if(window.innerWidth <= 768){
-    // 📱 PHONE → show only in GAME
-    if(id === "game"){
-      rating.style.display = "block";
-    } else {
-      rating.style.display = "none";
-    }
-  } else {
-    // 💻 LAPTOP → always show
-    rating.style.display = "block";
-  }
+  handleRatingVisibility(id);
 }
-document.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("loveRating");
-  if (saved) {
-    rateSite(parseInt(saved));
-  }
+
+// 👇 RUN ON LOAD
+window.addEventListener("load", () => {
+  showSection("home");
 });
 
 // MUSIC TOGGLE

@@ -266,15 +266,30 @@ function sendMessage(){
 
   // 💖 AUTO REPLY (ROMANTIC)
   setTimeout(() => {
-    messages.push({ type: "received", text: "I love you more ❤️" });
+  const typing = document.createElement("div");
+  typing.className = "received";
+  typing.innerText = "Typing...";
+  document.getElementById("chatBox").appendChild(typing);
+
+  setTimeout(() => {
+    typing.remove();
+
+    const replies = [
+      "I love you more ❤️",
+      "You make me so happy 🥰",
+      "You’re my world 🌍❤️",
+      "Forever yours 💕"
+    ];
+
+    const randomReply = replies[Math.floor(Math.random() * replies.length)];
+
+    messages.push({ type: "received", text: randomReply });
+
     localStorage.setItem("loveChat", JSON.stringify(messages));
     loadMessages();
   }, 1000);
 
-  localStorage.setItem("loveChat", JSON.stringify(messages));
-  input.value = "";
-  loadMessages();
-}
+}, 500);
 
 // LOAD ON START
 window.addEventListener("load", loadMessages);

@@ -377,6 +377,59 @@ cursor:pointer;
   color: #fff;
 }
 
+.chat-container{
+  max-width: 400px;
+  margin: 30px auto;
+  background: rgba(255,255,255,0.2);
+  padding: 15px;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+#chatBox{
+  height: 300px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.sent{
+  background: #ff4b7d;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 15px;
+  margin: 5px;
+  text-align: right;
+}
+
+.received{
+  background: white;
+  color: #ff4b7d;
+  padding: 8px 12px;
+  border-radius: 15px;
+  margin: 5px;
+  text-align: left;
+}
+
+.chat-input{
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input input{
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+}
+
+.chat-input button{
+  padding: 10px;
+  background: #ff4b7d;
+  color: white;
+  border: none;
+  border-radius: 10px;
+}
+
 /* HEARTS */
 .heart{
 position:fixed;

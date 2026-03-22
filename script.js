@@ -1,4 +1,18 @@
 // =============================
+// Initialize Firebase (Realtime Database)
+const firebaseConfig = {
+  apiKey: "AIzaSyCDjfXhTYoAqhUCTMbrOB5uiZeU7dDqgbo",
+  authDomain: "aloeva-chatbot.firebaseapp.com",
+  databaseURL: "https://aloeva-chatbot-default-rtdb.firebaseio.com",
+  projectId: "aloeva-chatbot",
+  storageBucket: "aloeva-chatbot.firebasestorage.app",
+  messagingSenderId: "216931642104",
+  appId: "1:216931642104:web:68522fe6c57aa79565a90d"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 // 🔥 SERVICE WORKER REGISTER
 // =============================
 if ('serviceWorker' in navigator) {
@@ -209,19 +223,7 @@ function flipCard(el){
 // 💬 FIREBASE CHAT
 // =============================
 
-// Initialize Firebase (Realtime Database)
-const firebaseConfig = {
-  apiKey: "AIzaSyCDjfXhTYoAqhUCTMbrOB5uiZeU7dDqgbo",
-  authDomain: "aloeva-chatbot.firebaseapp.com",
-  databaseURL: "https://aloeva-chatbot-default-rtdb.firebaseio.com",
-  projectId: "aloeva-chatbot",
-  storageBucket: "aloeva-chatbot.firebasestorage.app",
-  messagingSenderId: "216931642104",
-  appId: "1:216931642104:web:68522fe6c57aa79565a90d"
-};
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 
 // Load messages from Firebase
 function loadMessages(){

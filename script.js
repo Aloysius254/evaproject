@@ -9,16 +9,29 @@ if ('serviceWorker' in navigator) {
 
 function showSection(id){
   const sections = document.querySelectorAll("section");
+  const rating = document.getElementById("site-rating");
 
   sections.forEach(sec => {
-    if(sec.id !== "site-rating"){   // 🚨 don't hide rating
+    if(sec.id !== "site-rating"){
       sec.style.display = "none";
     }
   });
 
   document.getElementById(id).style.display = "block";
-}
 
+  // 👇 DETECT PHONE
+  if(window.innerWidth <= 768){
+    // 📱 PHONE → show only in GAME
+    if(id === "game"){
+      rating.style.display = "block";
+    } else {
+      rating.style.display = "none";
+    }
+  } else {
+    // 💻 LAPTOP → always show
+    rating.style.display = "block";
+  }
+}
 document.addEventListener("DOMContentLoaded", () => {
   const saved = localStorage.getItem("loveRating");
   if (saved) {

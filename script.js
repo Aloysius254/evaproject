@@ -246,15 +246,18 @@ function loadMessages(){
 function sendMessage(){
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
-  if(text==="") return;
+  if(text === "") return;
 
+  // Push to Firebase Realtime Database
   const messagesRef = db.ref("messages");
   messagesRef.push({
     text: text,
     time: Date.now()
+  }).then(() => {
+    input.value = ""; // clear input after sending
+  }).catch((err) => {
+    console.error("Error sending message:", err);
   });
-
-  input.value="";
 }
 
 // =============================

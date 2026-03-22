@@ -313,35 +313,34 @@ function loadMessages(){
 
 function sendMessage(){
   const input = document.getElementById("chatInput");
-  if(!input) return;
-
   const text = input.value.trim();
+
   if(text==="") return;
 
-  let messages = JSON.parse(localStorage.getItem("loveChat")) || [];
+  db.collection("messages").add({
+    text: text,
+    time: Date.now()
+  });
 
-  messages.push({type:"sent", text:text});
   input.value="";
-
-  localStorage.setItem("loveChat", JSON.stringify(messages));
-  loadMessages();
-
-  setTimeout(()=>{
-    const replies=[
-      "I love you more ❤️",
-      "You make me so happy 🥰",
-      "You’re my world 🌍❤️",
-      "Forever yours 💕"
-    ];
-
-    const randomReply = replies[Math.floor(Math.random()*replies.length)];
-
-    messages.push({type:"received", text:randomReply});
-    localStorage.setItem("loveChat", JSON.stringify(messages));
-    loadMessages();
-
-  },1000);
 }
+
+// REAL-TIME LISTENER
+db.collection("messages").orderBy("time")
+.onSnapshot(snapshot => {
+  const chatBox = document.getElementById("chatBox");
+  chatBox.innerHTML="";
+
+  snapshot.forEach(doc => {
+    const div = document.createElement("div");
+    div.className="received";
+    div.innerText=doc.data().text;
+
+    chatBox.appendChild(div);
+  });
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+});
 
 let mediaRecorder;
 let audioChunks = [];
@@ -383,6 +382,31 @@ function stopRecording(){
     mediaRecorder.stop();
   }
 }
+
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyCDjfXhTYoAqhUCTMbrOB5uiZeU7dDqgbo",
+    authDomain: "aloeva-chatbot.firebaseapp.com",
+    databaseURL: "https://aloeva-chatbot-default-rtdb.firebaseio.com",
+    projectId: "aloeva-chatbot",
+    storageBucket: "aloeva-chatbot.firebasestorage.app",
+    messagingSenderId: "216931642104",
+    appId: "1:216931642104:web:68522fe6c57aa79565a90d",
+    measurementId: "G-4E0TY3ZF1G"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 
 // =============================
 // 📲 INSTALL BUTTON

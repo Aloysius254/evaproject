@@ -343,6 +343,47 @@ function sendMessage(){
   },1000);
 }
 
+let mediaRecorder;
+let audioChunks = [];
+
+const recordBtn = document.getElementById("recordBtn");
+const audioPlayback = document.getElementById("audioPlayback");
+
+if(recordBtn){
+  recordBtn.addEventListener("mousedown", startRecording);
+  recordBtn.addEventListener("mouseup", stopRecording);
+
+  // 📱 MOBILE SUPPORT
+  recordBtn.addEventListener("touchstart", startRecording);
+  recordBtn.addEventListener("touchend", stopRecording);
+}
+
+function startRecording(){
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => {
+        audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks);
+        const audioUrl = URL.createObjectURL(audioBlob);
+        audioPlayback.src = audioUrl;
+      };
+    });
+}
+
+function stopRecording(){
+  if(mediaRecorder){
+    mediaRecorder.stop();
+  }
+}
+
 // =============================
 // 📲 INSTALL BUTTON
 // =============================

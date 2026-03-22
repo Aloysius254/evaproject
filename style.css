@@ -466,6 +466,37 @@ transform:scale(1.1);
 background:#ff758c;
 }
 
+.voice-box{
+  margin-top:20px;
+}
+
+#recordBtn{
+  padding:12px 20px;
+  background:#ff4b7d;
+  color:white;
+  border:none;
+  border-radius:25px;
+  font-size:16px;
+  cursor:pointer;
+}
+
+.contact-btn{
+  display:block;
+  margin:15px auto;
+  padding:12px;
+  width:200px;
+  text-align:center;
+  background:#25D366;
+  color:white;
+  border-radius:20px;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.contact-btn:last-child{
+  background:#ff4b7d;
+}
+
 @keyframes float{
 0%{transform:translateY(0);}
 100%{transform:translateY(-1000px);}

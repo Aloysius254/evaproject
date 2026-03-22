@@ -383,30 +383,18 @@ function stopRecording(){
   }
 }
 
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+const firebaseConfig = {
+  apiKey: "AIzaSyCDjfXhTYoAqhUCTMbrOB5uiZeU7dDqgbo",
+  authDomain: "aloeva-chatbot.firebaseapp.com",
+  databaseURL: "https://aloeva-chatbot-default-rtdb.firebaseio.com",
+  projectId: "aloeva-chatbot",
+  storageBucket: "aloeva-chatbot.firebasestorage.app",
+  messagingSenderId: "216931642104",
+  appId: "1:216931642104:web:68522fe6c57aa79565a90d"
+};
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyCDjfXhTYoAqhUCTMbrOB5uiZeU7dDqgbo",
-    authDomain: "aloeva-chatbot.firebaseapp.com",
-    databaseURL: "https://aloeva-chatbot-default-rtdb.firebaseio.com",
-    projectId: "aloeva-chatbot",
-    storageBucket: "aloeva-chatbot.firebasestorage.app",
-    messagingSenderId: "216931642104",
-    appId: "1:216931642104:web:68522fe6c57aa79565a90d",
-    measurementId: "G-4E0TY3ZF1G"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 // =============================
 // 📲 INSTALL BUTTON

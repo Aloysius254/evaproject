@@ -220,47 +220,55 @@ function flipCard(el){
 }
 
 // =============================
-// 💬 FIREBASE CHAT
+// 💬 FIREBASE CHAT (WORKING VERSION)
 // =============================
 
+// Make sure Firebase is initialized before this code
+// firebase.initializeApp(firebaseConfig);
+// const db = firebase.database();
 
-
-// Load messages from Firebase
-function loadMessages(){
+function loadMessages() {
   const chatBox = document.getElementById("chatBox");
-  if(!chatBox) return;
+  if (!chatBox) return;
 
   const messagesRef = db.ref("messages");
 
-  messagesRef.orderByChild("time").on("value", snapshot => {
-    chatBox.innerHTML="";
-    snapshot.forEach(child => {
+  // Listen for changes in realtime
+  messagesRef.orderByChild("time").on("value", (snapshot) => {
+    chatBox.innerHTML = ""; // clear chat
+    snapshot.forEach((child) => {
       const div = document.createElement("div");
-      div.className="received";
+      div.className = "received"; // you can style "sent" differently if needed
       div.innerText = child.val().text;
       chatBox.appendChild(div);
     });
+    // Scroll to bottom
     chatBox.scrollTop = chatBox.scrollHeight;
   });
 }
 
-// Send new message
-function sendMessage(){
+function sendMessage() {
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
-  if(text === "") return;
+  if (text === "") return;
 
-  // Push to Firebase Realtime Database
   const messagesRef = db.ref("messages");
-  messagesRef.push({
-    text: text,
-    time: Date.now()
-  }).then(() => {
-    input.value = ""; // clear input after sending
-  }).catch((err) => {
-    console.error("Error sending message:", err);
-  });
+  messagesRef
+    .push({
+      text: text,
+      time: Date.now(),
+    })
+    .then(() => {
+      input.value = ""; // clear input
+    })
+    .catch((err) => {
+      console.error("Error sending message:", err);
+      alert("Failed to send message. Check your database rules!");
+    });
 }
+
+// Load messages when page is ready
+window.addEventListener("load", loadMessages);
 
 // =============================
 // 🎤 VOICE RECORDING

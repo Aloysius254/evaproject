@@ -238,6 +238,47 @@ function flipCard(el){
   }
 }
 
+function loadMessages(){
+  const chatBox = document.getElementById("chatBox");
+  const messages = JSON.parse(localStorage.getItem("loveChat")) || [];
+
+  chatBox.innerHTML = "";
+
+  messages.forEach(msg => {
+    const div = document.createElement("div");
+    div.className = msg.type;
+    div.innerText = msg.text;
+    chatBox.appendChild(div);
+  });
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function sendMessage(){
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+
+  if(text === "") return;
+
+  let messages = JSON.parse(localStorage.getItem("loveChat")) || [];
+
+  messages.push({ type: "sent", text: text });
+
+  // 💖 AUTO REPLY (ROMANTIC)
+  setTimeout(() => {
+    messages.push({ type: "received", text: "I love you more ❤️" });
+    localStorage.setItem("loveChat", JSON.stringify(messages));
+    loadMessages();
+  }, 1000);
+
+  localStorage.setItem("loveChat", JSON.stringify(messages));
+  input.value = "";
+  loadMessages();
+}
+
+// LOAD ON START
+window.addEventListener("load", loadMessages);
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/evaproject/service-worker.js')

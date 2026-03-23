@@ -1,3 +1,8 @@
+if(!localStorage.getItem("user")){
+  let name = prompt("Enter your name ❤️");
+  localStorage.setItem("user", name || "me");
+}
+
 // =============================
 // 🚀 SAFE START (NO CRASHES)
 // =============================
@@ -216,56 +221,72 @@ function rateSite(rating){
 // =============================
 // 💬 CHAT (WORKING + EMOJIS)
 // =============================
-function loadMessages(){
-  const box=document.getElementById("chatBox");
-  if(!box) return;
+// =============================
+// 🔥 FIREBASE INIT
+// =============================
+const firebaseConfig = {
+  apiKey: "AIzaSyCDjfXhTYoAqhUCTMbrOB5uiZeU7dDqgbo",
+  authDomain: "aloeva-chatbot.firebaseapp.com",
+  databaseURL: "https://aloeva-chatbot-default-rtdb.firebaseio.com",
+  projectId: "aloeva-chatbot",
+  storageBucket: "aloeva-chatbot.firebasestorage.app",
+  messagingSenderId: "216931642104",
+  appId: "1:216931642104:web:68522fe6c57aa79565a90d",
+  measurementId: "G-4E0TY3ZF1G"
+};
 
-  const messages=JSON.parse(localStorage.getItem("loveChat"))||[];
-  box.innerHTML="";
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-  messages.forEach(msg=>{
-    const div=document.createElement("div");
-    div.className=msg.type;
-    div.innerHTML=msg.text; // ✅ emoji fix
-    box.appendChild(div);
+// =============================
+// 💬 LOAD MESSAGES (REAL TIME)
+// =============================
+function loadMessages() {
+  const chatBox = document.getElementById("chatBox");
+
+  db.ref("messages").on("value", (snapshot) => {
+    chatBox.innerHTML = "";
+
+    snapshot.forEach((child) => {
+      const msg = child.val();
+
+      const div = document.createElement("div");
+
+      const currentUser = localStorage.getItem("user");
+
+      div.className = (msg.user === currentUser) ? "sent" : "received";
+
+      div.innerText = msg.text;
+
+      chatBox.appendChild(div);
+    });
+
+    chatBox.scrollTop = chatBox.scrollHeight;
   });
-
-  box.scrollTop=box.scrollHeight;
 }
-
+// =============================
+// 📤 SEND MESSAGE
+// =============================
 function sendMessage(){
-  const input=document.getElementById("chatInput");
-  const text=input.value.trim();
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
 
   if(text==="") return;
 
-  let messages=JSON.parse(localStorage.getItem("loveChat"))||[];
+  const username = localStorage.getItem("user") || "me";
 
-  messages.push({type:"sent",text:text});
-  localStorage.setItem("loveChat",JSON.stringify(messages));
+  db.ref("messages").push({
+    text: text,
+    user: username,
+    time: Date.now()
+  });
 
-  loadMessages();
   input.value="";
-
-  setTimeout(()=>{
-    const replies=[
-      "I love you more ❤️",
-      "You make me happy 🥰",
-      "You’re my world 🌍❤️",
-      "Forever yours 💕"
-    ];
-
-    let messages=JSON.parse(localStorage.getItem("loveChat"))||[];
-    messages.push({
-      type:"received",
-      text:replies[Math.floor(Math.random()*replies.length)]
-    });
-
-    localStorage.setItem("loveChat",JSON.stringify(messages));
-    loadMessages();
-
-  },1000);
 }
+// =============================
+// 🚀 LOAD CHAT
+// =============================
+window.addEventListener("load", loadMessages);
 
 // =============================
 // 🎮 LOVE GAME

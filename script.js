@@ -288,6 +288,32 @@ function sendMessage(){
 // =============================
 window.addEventListener("load", loadMessages);
 
+//user tying
+const typingRef = db.ref("typing");
+
+document.getElementById("chatInput").addEventListener("input", () => {
+  const user = localStorage.getItem("user");
+  typingRef.set({ user: user, typing: true });
+
+  setTimeout(() => {
+    typingRef.set({ user: user, typing: false });
+  }, 1500);
+});
+
+//show typing on screen
+typingRef.on("value", (snapshot) => {
+  const data = snapshot.val();
+  const typingDiv = document.getElementById("typingStatus");
+
+  const currentUser = localStorage.getItem("user");
+
+  if (data && data.typing && data.user !== currentUser) {
+    typingDiv.innerText = data.user + " is typing...";
+  } else {
+    typingDiv.innerText = "";
+  }
+});
+
 // =============================
 // 🎮 LOVE GAME
 // =============================

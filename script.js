@@ -115,7 +115,7 @@ function handleSwipe() {
   if (Math.abs(diffY) > Math.abs(diffX)) return;
 
   // 🎯 Require strong swipe (not small touch)
-  if (Math.abs(diffX) < 80) return;
+  if (Math.abs(diffX) < 120) return;
 
   const current = getCurrentPage();
   const index = pages.indexOf(current);

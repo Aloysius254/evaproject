@@ -428,21 +428,31 @@ function startRecording(){
 }
 
 function stopRecording(){
+  if(!mediaRecorder) {
+    console.log("Recorder not started ❌");
+    return;
+  }
+
   mediaRecorder.stop();
 
   mediaRecorder.onstop = async () => {
-    const blob = new Blob(audioChunks);
+    const blob = new Blob(audioChunks, { type: "audio/webm" });
 
-    const storageRef = firebase.storage().ref("voices/" + Date.now() + ".webm");
-    await storageRef.put(blob);
+    try {
+      const storageRef = firebase.storage().ref("voices/" + Date.now() + ".webm");
+      await storageRef.put(blob);
 
-    const url = await storageRef.getDownloadURL();
+      const url = await storageRef.getDownloadURL();
 
-    db.ref("messages").push({
-      voice: url,
-      user: localStorage.getItem("user"),
-      time: Date.now()
-    });
+      db.ref("messages").push({
+        voice: url,
+        user: localStorage.getItem("user") || "me",
+        time: Date.now()
+      });
+
+    } catch(err) {
+      console.error("Upload failed:", err);
+    }
   };
 }
 

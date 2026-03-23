@@ -56,7 +56,8 @@ function showSection(id){
 window.addEventListener("load", () => {
   const savedPage = localStorage.getItem("currentPage") || "home";
   showSection(savedPage);
-});
+}); 
+
 
 // =============================
 // 👉 IMPROVED SWIPE NAVIGATION
@@ -420,7 +421,10 @@ function sendMessage() {
 // =============================
 // 🚀 LOAD CHAT
 // =============================
-window.addEventListener("load", loadMessages);
+window.addEventListener("load", () => {
+  loadMessages();
+  setOnline();
+});
 
 //user tying
 const typingRef = db.ref("typing");

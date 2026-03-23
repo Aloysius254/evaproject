@@ -50,57 +50,75 @@ function showSection(id){
 }
 
 // =============================
-// 👉 SWIPE NAVIGATION (WORKS WITH YOUR showSection)
+// 👉 IMPROVED SWIPE NAVIGATION
 // =============================
 
 let startX = 0;
+let startY = 0;
 let endX = 0;
+let endY = 0;
 
-// Order of your sections
+// Sections order
 const pages = ["home", "story", "memories", "game"];
 
-// Get current visible section
+// Get current section
 function getCurrentPage() {
-  let current = "home"; // default
-
+  let current = "home";
   pages.forEach(id => {
     const el = document.getElementById(id);
     if (el && el.style.display === "block") {
       current = id;
     }
   });
-
   return current;
 }
 
 // Touch start
 document.addEventListener("touchstart", (e) => {
+  // 🚫 Don't swipe if user is typing in input or textarea
+  if (
+    e.target.tagName === "INPUT" ||
+    e.target.tagName === "TEXTAREA"
+  ) return;
+
   startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
 });
 
 // Touch end
 document.addEventListener("touchend", (e) => {
+  if (
+    e.target.tagName === "INPUT" ||
+    e.target.tagName === "TEXTAREA"
+  ) return;
+
   endX = e.changedTouches[0].clientX;
+  endY = e.changedTouches[0].clientY;
+
   handleSwipe();
 });
 
 function handleSwipe() {
-  const diff = startX - endX;
+  const diffX = startX - endX;
+  const diffY = startY - endY;
+
+  // 🎯 Ignore vertical scrolls (important!)
+  if (Math.abs(diffY) > Math.abs(diffX)) return;
+
+  // 🎯 Require strong swipe (not small touch)
+  if (Math.abs(diffX) < 80) return;
+
   const current = getCurrentPage();
   const index = pages.indexOf(current);
 
-  // 👉 Swipe LEFT (next page)
-  if (diff > 50) {
-    if (index < pages.length - 1) {
-      showSection(pages[index + 1]);
-    }
+  // 👉 Swipe LEFT
+  if (diffX > 0 && index < pages.length - 1) {
+    showSection(pages[index + 1]);
   }
 
-  // 👉 Swipe RIGHT (previous page)
-  else if (diff < -50) {
-    if (index > 0) {
-      showSection(pages[index - 1]);
-    }
+  // 👉 Swipe RIGHT
+  else if (diffX < 0 && index > 0) {
+    showSection(pages[index - 1]);
   }
 }
 

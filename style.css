@@ -397,22 +397,23 @@ cursor:pointer;
 .sent {
   align-self: flex-end;
   background: #dcf8c6;
+  color: #000; /* 🔥 make text black */
   padding: 10px;
   border-radius: 10px 0 10px 10px;
   margin: 5px;
   max-width: 70%;
-  font-size: 14px;
+  font-size: 15px;
 }
 
-/* RECEIVED (HER) */
 .received {
   align-self: flex-start;
   background: #ffffff;
+  color: #000; /* 🔥 make text black */
   padding: 10px;
   border-radius: 0 10px 10px 10px;
   margin: 5px;
   max-width: 70%;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .chat-input {

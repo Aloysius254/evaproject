@@ -334,17 +334,33 @@ function loadMessages() {
       const msg = child.val();
       const key = child.key;
 
-      const div = document.createElement("div");
-
       const currentUser = localStorage.getItem("user");
+
+      // ✅ MAIN MESSAGE DIV
+      const div = document.createElement("div");
       div.className = (msg.user === currentUser) ? "sent" : "received";
 
-      // TEXT
-      const text = document.createElement("span");
-      text.innerText = msg.text || "";
-      div.appendChild(text);
+      // 👤 SENDER NAME
+      const name = document.createElement("small");
+      name.style.fontWeight = "bold";
+      name.style.display = "block";
+      name.innerText = msg.user || "Unknown";
 
-      // ✔✔ TICKS
+      div.appendChild(name);
+
+      // 💬 MESSAGE CONTENT (text or voice)
+      if(msg.voice){
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.src = msg.voice;
+        div.appendChild(audio);
+      } else {
+        const text = document.createElement("span");
+        text.innerText = msg.text || "";
+        div.appendChild(text);
+      }
+
+      // ✔✔ TICKS FOR CURRENT USER
       if(msg.user === currentUser){
         const tick = document.createElement("small");
         tick.style.marginLeft = "5px";
@@ -352,7 +368,7 @@ function loadMessages() {
         div.appendChild(tick);
       }
 
-      // MARK AS SEEN
+      // MARK OTHER USERS' MESSAGES AS SEEN
       if(msg.user !== currentUser && !msg.seen){
         db.ref("messages/" + key).update({ seen: true });
       }

@@ -47,7 +47,16 @@ function showSection(id){
   if(target) target.style.display = "block";
 
   handleRatingVisibility(id);
+
+  // 🧠 SAVE CURRENT PAGE
+  localStorage.setItem("currentPage", id);
 }
+
+// load page
+window.addEventListener("load", () => {
+  const savedPage = localStorage.getItem("currentPage") || "home";
+  showSection(savedPage);
+});
 
 // =============================
 // 👉 IMPROVED SWIPE NAVIGATION

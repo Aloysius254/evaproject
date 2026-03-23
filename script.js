@@ -50,6 +50,61 @@ function showSection(id){
 }
 
 // =============================
+// 👉 SWIPE NAVIGATION (WORKS WITH YOUR showSection)
+// =============================
+
+let startX = 0;
+let endX = 0;
+
+// Order of your sections
+const pages = ["home", "story", "memories", "game"];
+
+// Get current visible section
+function getCurrentPage() {
+  let current = "home"; // default
+
+  pages.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.style.display === "block") {
+      current = id;
+    }
+  });
+
+  return current;
+}
+
+// Touch start
+document.addEventListener("touchstart", (e) => {
+  startX = e.touches[0].clientX;
+});
+
+// Touch end
+document.addEventListener("touchend", (e) => {
+  endX = e.changedTouches[0].clientX;
+  handleSwipe();
+});
+
+function handleSwipe() {
+  const diff = startX - endX;
+  const current = getCurrentPage();
+  const index = pages.indexOf(current);
+
+  // 👉 Swipe LEFT (next page)
+  if (diff > 50) {
+    if (index < pages.length - 1) {
+      showSection(pages[index + 1]);
+    }
+  }
+
+  // 👉 Swipe RIGHT (previous page)
+  else if (diff < -50) {
+    if (index > 0) {
+      showSection(pages[index - 1]);
+    }
+  }
+}
+
+// =============================
 // 🎵 MUSIC
 // =============================
 function toggleMusic(){

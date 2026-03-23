@@ -243,6 +243,7 @@ const db = firebase.database();
 // =============================
 function loadMessages() {
   const chatBox = document.getElementById("chatBox");
+  const currentUser = localStorage.getItem("user");
 
   db.ref("messages").on("value", (snapshot) => {
     chatBox.innerHTML = "";
@@ -251,12 +252,17 @@ function loadMessages() {
       const msg = child.val();
 
       const div = document.createElement("div");
-
-      const currentUser = localStorage.getItem("user");
-
       div.className = (msg.user === currentUser) ? "sent" : "received";
 
-      div.innerText = msg.text;
+      // If message has a voice recording
+      if (msg.voice) {
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.src = msg.voice;
+        div.appendChild(audio);
+      } else {
+        div.innerText = msg.text;
+      }
 
       chatBox.appendChild(div);
     });
@@ -313,6 +319,52 @@ typingRef.on("value", (snapshot) => {
     typingDiv.innerText = "";
   }
 });
+
+//voice record
+let mediaRecorder;
+let audioChunks = [];
+
+const recordBtn = document.getElementById("recordBtn");
+
+recordBtn.addEventListener("mousedown", startRecording);
+recordBtn.addEventListener("mouseup", stopRecording);
+
+recordBtn.addEventListener("touchstart", startRecording);
+recordBtn.addEventListener("touchend", stopRecording);
+
+function startRecording(){
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+
+    audioChunks = [];
+
+    mediaRecorder.ondataavailable = e => {
+      audioChunks.push(e.data);
+    };
+  });
+}
+
+function stopRecording(){
+  mediaRecorder.stop();
+
+  mediaRecorder.onstop = async () => {
+    const blob = new Blob(audioChunks);
+
+    const storageRef = firebase.storage().ref("voices/" + Date.now() + ".webm");
+    await storageRef.put(blob);
+
+    const url = await storageRef.getDownloadURL();
+
+    db.ref("messages").push({
+      voice: url,
+      user: localStorage.getItem("user"),
+      time: Date.now()
+    });
+  };
+}
+
+
 
 // =============================
 // 🎮 LOVE GAME

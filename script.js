@@ -325,25 +325,35 @@ const db = firebase.database();
 // =============================
 function loadMessages() {
   const chatBox = document.getElementById("chatBox");
-  const currentUser = localStorage.getItem("user");
 
   db.ref("messages").on("value", (snapshot) => {
     chatBox.innerHTML = "";
 
     snapshot.forEach((child) => {
       const msg = child.val();
+      const key = child.key;
 
       const div = document.createElement("div");
+
+      const currentUser = localStorage.getItem("user");
       div.className = (msg.user === currentUser) ? "sent" : "received";
 
-      // If message has a voice recording
-      if (msg.voice) {
-        const audio = document.createElement("audio");
-        audio.controls = true;
-        audio.src = msg.voice;
-        div.appendChild(audio);
-      } else {
-        div.innerText = msg.text;
+      // TEXT
+      const text = document.createElement("span");
+      text.innerText = msg.text || "";
+      div.appendChild(text);
+
+      // ✔✔ TICKS
+      if(msg.user === currentUser){
+        const tick = document.createElement("small");
+        tick.style.marginLeft = "5px";
+        tick.innerText = msg.seen ? "✔✔" : "✔";
+        div.appendChild(tick);
+      }
+
+      // MARK AS SEEN
+      if(msg.user !== currentUser && !msg.seen){
+        db.ref("messages/" + key).update({ seen: true });
       }
 
       chatBox.appendChild(div);
@@ -352,24 +362,60 @@ function loadMessages() {
     chatBox.scrollTop = chatBox.scrollHeight;
   });
 }
+// online/offline status
+const statusRef = db.ref("status");
+
+function setOnline(){
+  const user = localStorage.getItem("user");
+
+  statusRef.child(user).set({
+    online: true,
+    lastSeen: Date.now()
+  });
+
+  window.addEventListener("beforeunload", () => {
+    statusRef.child(user).set({
+      online: false,
+      lastSeen: Date.now()
+    });
+  });
+}
+// show status online or offline
+statusRef.on("value", (snapshot) => {
+  const data = snapshot.val();
+  const currentUser = localStorage.getItem("user");
+  const statusDiv = document.getElementById("userStatus");
+
+  for(let user in data){
+    if(user !== currentUser){
+      if(data[user].online){
+        statusDiv.innerText = user + " is online 🟢";
+      } else {
+        let time = new Date(data[user].lastSeen).toLocaleTimeString();
+        statusDiv.innerText = "Last seen: " + time;
+      }
+    }
+  }
+});
+
 // =============================
 // 📤 SEND MESSAGE
 // =============================
-function sendMessage(){
+function sendMessage() {
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
+  if (text === "") return;
 
-  if(text==="") return;
-
-  const username = localStorage.getItem("user") || "me";
+  const user = localStorage.getItem("user");
 
   db.ref("messages").push({
     text: text,
-    user: username,
-    time: Date.now()
+    user: user,
+    time: Date.now(),
+    seen: false
   });
 
-  input.value="";
+  input.value = "";
 }
 // =============================
 // 🚀 LOAD CHAT

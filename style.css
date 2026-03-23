@@ -376,6 +376,12 @@ cursor:pointer;
   font-weight: bold;
   color: #fff;
 }
+/* chat header */
+.chat-header {
+  background: #075e54;
+  color: white;
+  padding: 10px;
+}
 
 /*chatbox */
 #chatBox {

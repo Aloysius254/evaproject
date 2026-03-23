@@ -214,13 +214,14 @@ gtag('config', 'G-Z4F89D35GQ');
   📧 Send Email
 </a>
 
-  <h2>Love Chatbot 💬</h2>
-  
-<div id="chatBox"></div>
-<div class="chat-input">
-  <input type="text" id="chatInput" placeholder="Type your message ❤️">
-  <button onclick="sendMessage()">Send</button>
-</div>
+  <h2>💬 Our Private Chat</h2>
+
+  <div id="chatBox" class="chat-box"></div>
+
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Type a message ❤️">
+    <button onclick="sendMessage()">Send</button>
+  </div>
   
 
   
@@ -238,7 +239,9 @@ gtag('config', 'G-Z4F89D35GQ');
 
 
 
-
+<!-- Firebase (REQUIRED) -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 <!-- Your main JS -->
 <script src="script.js"></script>
   

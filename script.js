@@ -1,34 +1,15 @@
-// =============================
-// Initialize Firebase (Realtime Database)
-const firebaseConfig = {
-  apiKey: "AIzaSyCDjfXhTYoAqhUCTMbrOB5uiZeU7dDqgbo",
-  authDomain: "aloeva-chatbot.firebaseapp.com",
-  databaseURL: "https://aloeva-chatbot-default-rtdb.firebaseio.com",
-  projectId: "aloeva-chatbot",
-  storageBucket: "aloeva-chatbot.firebasestorage.app",
-  messagingSenderId: "216931642104",
-  appId: "1:216931642104:web:68522fe6c57aa79565a90d"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// 🔥 SERVICE WORKER REGISTER
-// =============================
+// SECTION SWITCHING
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/evaproject/service-worker.js')
-      .then(() => console.log("Service Worker Registered ✅"))
-      .catch(() => console.log("Service Worker Failed ❌"));
+      .then(reg => console.log("Service Worker Registered ✅", reg))
+      .catch(err => console.log("Service Worker Failed ❌", err));
   });
 }
 
-// =============================
-// 📱 SECTION SWITCHING
-// =============================
 function handleRatingVisibility(currentSection){
   const rating = document.getElementById("site-rating");
-  if(!rating) return;
+
   if(window.innerWidth <= 768){
     rating.style.display = (currentSection === "game") ? "block" : "none";
   } else {
@@ -38,71 +19,64 @@ function handleRatingVisibility(currentSection){
 
 function showSection(id){
   const sections = document.querySelectorAll("section");
+
   sections.forEach(sec => {
     if(sec.id !== "site-rating"){
       sec.style.display = "none";
     }
   });
 
-  const target = document.getElementById(id);
-  if(target) target.style.display = "block";
+  document.getElementById(id).style.display = "block";
 
   handleRatingVisibility(id);
 }
 
-// LOAD DEFAULT PAGE
+// 👇 RUN ON LOAD
 window.addEventListener("load", () => {
   showSection("home");
-  updateCounter();
-  loadMessages();
 });
 
-// =============================
-// 🎵 MUSIC CONTROL
-// =============================
+// MUSIC TOGGLE
 function toggleMusic() {
   const music = document.getElementById('bgMusic');
   const btn = document.getElementById('musicBtn');
-  if (!music || !btn) return;
-
   if (music.paused) {
-    music.play();
-    btn.textContent = "🎵 Pause Music";
+      music.play();
+      btn.textContent = "🎵 Pause Music";
   } else {
-    music.pause();
-    btn.textContent = "🎵 Play Music";
+      music.pause();
+      btn.textContent = "🎵 Play Music";
   }
 }
 
-// =============================
-// ❤️ LOVE COUNTER
-// =============================
+// LOVE COUNTER
 let startDate = new Date("2025-06-13");
 function updateCounter(){
-  const el = document.getElementById("counter");
-  if(!el) return;
   let now = new Date();
   let diff = now - startDate;
   let days = Math.floor(diff / (1000*60*60*24));
-  el.innerText = "We have loved each other for " + days + " days ❤️";
+  document.getElementById("counter").innerText = "We have loved each other for " + days + " days ❤️";
 }
 setInterval(updateCounter,1000);
 
-// =============================
-// 💌 POPUP
-// =============================
-function showPopup(){
-  const p = document.getElementById('popup');
-  if(p) p.style.display = 'block';
-}
-function closePopup(){
-  const p = document.getElementById('popup');
-  if(p) p.style.display = 'none';
-}
+// POPUP
+function showPopup(){ document.getElementById('popup').style.display = 'block'; }
+function closePopup(){ document.getElementById('popup').style.display = 'none'; }
 
-// =============================
-// ❤️ FLOATING HEARTS
-// =============================
+// COMMENTS
+const form = document.getElementById('commentForm');
+const commentList = document.getElementById('commentList');
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  const name = document.getElementById('name').value;
+  const comment = document.getElementById('comment').value;
+  const div = document.createElement('div');
+  div.innerHTML = `<p><strong>${name}:</strong> ${comment}</p>`;
+  commentList.appendChild(div);
+  form.reset();
+});
+
+// FLOATING HEARTS
 function createHeart(){
   let heart = document.createElement('div');
   heart.classList.add('heart');
@@ -115,217 +89,222 @@ function createHeart(){
 }
 setInterval(createHeart,500);
 
-// =============================
-// 🖼️ LIGHTBOX
-// =============================
+// LIGHTBOX
 let currentIndex=0;
+let images=document.querySelectorAll(".gallery img");
 function openLightbox(img){
-  const box = document.getElementById("lightbox");
-  const image = document.getElementById("lightbox-img");
-  if(!box || !image) return;
+  document.getElementById("lightbox").style.display="flex";
+  document.getElementById("lightbox-img").src=img.src;
+  images=document.querySelectorAll(".gallery img");
+  currentIndex=Array.from(images).indexOf(img);
+}
+function closeLightbox(){ document.getElementById("lightbox").style.display="none"; }
+function nextImage(){ currentIndex++; if(currentIndex>=images.length) currentIndex=0; document.getElementById("lightbox-img").src=images[currentIndex].src; }
+function prevImage(){ currentIndex--; if(currentIndex<0) currentIndex=images.length-1; document.getElementById("lightbox-img").src=images[currentIndex].src; }
 
-  box.style.display="flex";
-  image.src=img.src;
-
-  const images = document.querySelectorAll(".gallery img");
-  currentIndex = Array.from(images).indexOf(img);
-}
-function closeLightbox(){
-  const box = document.getElementById("lightbox");
-  if(box) box.style.display="none";
-}
-function nextImage(){
-  const images = document.querySelectorAll(".gallery img");
-  currentIndex = (currentIndex+1) % images.length;
-  document.getElementById("lightbox-img").src = images[currentIndex].src;
-}
-function prevImage(){
-  const images = document.querySelectorAll(".gallery img");
-  currentIndex = (currentIndex-1+images.length)%images.length;
-  document.getElementById("lightbox-img").src = images[currentIndex].src;
-}
+// AUTO SLIDESHOW
 setInterval(()=>{
-  const box = document.getElementById("lightbox");
-  if(box && box.style.display==="flex"){
-    nextImage();
-  }
+  if(document.getElementById("lightbox").style.display==="flex"){ nextImage(); }
 },3000);
 
-// =============================
-// ⭐ RATING SYSTEM
-// =============================
+// SWIPE FOR MOBILE
+let startX=0;
+document.getElementById("lightbox").addEventListener("touchstart", e=>{ startX=e.touches[0].clientX; });
+document.getElementById("lightbox").addEventListener("touchend", e=>{
+  let endX=e.changedTouches[0].clientX;
+  if(startX>endX+50){ nextImage(); } else if(startX<endX-50){ prevImage(); }
+});
+
 function rateSite(rating) {
   const container = document.getElementById("site-rating");
-  if(!container) return;
   const stars = container.querySelectorAll(".rating-stars span");
   const result = container.querySelector("#ratingResult");
+
   stars.forEach((star, index) => {
-    star.classList.remove("active","glow");
-    if(index < rating){
+    star.classList.remove("active", "glow");
+
+    if (index < rating) {
       star.classList.add("active");
-      setTimeout(()=>{ star.classList.add("glow"); }, index*100);
+
+      // 🔥 trigger glow animation
+      setTimeout(() => {
+        star.classList.add("glow");
+      }, index * 100); // stagger effect
     }
   });
-  const messages = ["","💔 Oh no... we can do better","😊 It's growing stronger","❤️ Beautiful love","💖 Almost perfect!","💞 Perfect love story!"];
+
+  const messages = [
+    "",
+    "💔 Oh no... we can do better",
+    "😊 It's growing stronger",
+    "❤️ Beautiful love",
+    "💖 Almost perfect!",
+    "💞 Perfect love story!"
+  ];
+
   result.innerText = messages[rating];
+
   localStorage.setItem("loveRating", rating);
 }
-window.addEventListener("load", ()=>{
+
+// LOAD SAVED RATING ON EVERY PAGE
+window.addEventListener("load", () => {
   const saved = localStorage.getItem("loveRating");
-  if(saved){
+  if (saved) {
     rateSite(parseInt(saved));
   }
 });
 
-// =============================
-// 🎮 LOVE GAME
-// =============================
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  // Show your install button
+  const installBtn = document.createElement("button");
+  installBtn.innerText = "Install App ❤️";
+  installBtn.style.position = "fixed";
+  installBtn.style.bottom = "20px";
+  installBtn.style.right = "20px";
+  installBtn.style.padding = "10px 20px";
+  installBtn.style.background = "#ff4b7d";
+  installBtn.style.color = "white";
+  installBtn.style.border = "none";
+  installBtn.style.borderRadius = "20px";
+
+  document.body.appendChild(installBtn);
+
+  installBtn.addEventListener("click", () => {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+    });
+  });
+});
+
+// LEVEL 1
 let lucky = Math.floor(Math.random()*6);
+
 function checkHeart(el){
   let boxes = document.querySelectorAll("#level1 .box");
   let index = Array.from(boxes).indexOf(el);
+
   if(index === lucky){
-    el.innerHTML="💖";
+    el.innerHTML = "💖";
     alert("You found my heart ❤️");
+
     document.getElementById("level1").style.display="none";
     document.getElementById("level2").style.display="block";
   } else {
-    el.innerHTML="💔";
+    el.innerHTML = "💔";
   }
 }
+
+// LEVEL 2
 function startQuiz(){
   let q1 = prompt("Where did we first meet?");
-  if(q1 && q1.toLowerCase()==="school"){
+  
+  if(q1 && q1.toLowerCase() === "school"){
     alert("Correct ❤️");
+
     document.getElementById("level2").style.display="none";
     document.getElementById("level3").style.display="block";
   } else {
-    alert("Try again 💕");
+    alert("Try again my love 💕");
   }
 }
-let firstCard=null;
+
+// LEVEL 3
+let firstCard = null;
+
 function flipCard(el){
-  el.innerHTML="❤️";
+  el.innerHTML = "❤️";
+
   if(!firstCard){
-    firstCard=el;
+    firstCard = el;
   } else {
     setTimeout(()=>{
       firstCard.innerHTML="💌";
       el.innerHTML="💌";
-      firstCard=null;
+      firstCard = null;
+
       document.getElementById("level3").style.display="none";
       document.getElementById("final").style.display="block";
+
+      startHearts(); // shared effect
+      toggleMusic(); // shared music
     },1000);
   }
 }
 
-// =============================
-// 💬 FIREBASE CHAT (WORKING VERSION)
-// =============================
-
-// Make sure Firebase is initialized before this code
-// firebase.initializeApp(firebaseConfig);
-// const db = firebase.database();
-
-function loadMessages() {
+function loadMessages(){
   const chatBox = document.getElementById("chatBox");
-  if (!chatBox) return;
+  const messages = JSON.parse(localStorage.getItem("loveChat")) || [];
 
-  const messagesRef = db.ref("messages");
+  chatBox.innerHTML = "";
 
-  // Listen for changes in realtime
-  messagesRef.orderByChild("time").on("value", (snapshot) => {
-    chatBox.innerHTML = ""; // clear chat
-    snapshot.forEach((child) => {
-      const div = document.createElement("div");
-      div.className = "received"; // you can style "sent" differently if needed
-      div.innerText = child.val().text;
-      chatBox.appendChild(div);
-    });
-    // Scroll to bottom
-    chatBox.scrollTop = chatBox.scrollHeight;
+  messages.forEach(msg => {
+    const div = document.createElement("div");
+    div.className = msg.type;
+    div.innerText = msg.text;
+    chatBox.appendChild(div);
+  });
+
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function sendMessage(){
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+
+  if(text === "") return;
+
+  let messages = JSON.parse(localStorage.getItem("loveChat")) || [];
+
+  messages.push({ type: "sent", text: text });
+
+  // 💖 AUTO REPLY (ROMANTIC)
+  setTimeout(() => {
+  const typing = document.createElement("div");
+  typing.className = "received";
+  typing.innerText = "Typing...";
+  document.getElementById("chatBox").appendChild(typing);
+
+  setTimeout(() => {
+    typing.remove();
+
+    const replies = [
+      "I love you more ❤️",
+      "You make me so happy 🥰",
+      "You’re my world 🌍❤️",
+      "Forever yours 💕"
+    ];
+
+    const randomReply = replies[Math.floor(Math.random() * replies.length)];
+
+    messages.push({ type: "received", text: randomReply });
+
+    localStorage.setItem("loveChat", JSON.stringify(messages));
+    loadMessages();
+  }, 1000);
+
+}, 500);
+
+// LOAD ON START
+window.addEventListener("load", loadMessages);
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/evaproject/service-worker.js')
+      .then(reg => console.log("Service Worker Registered ✅", reg))
+      .catch(err => console.log("Service Worker Failed ❌", err));
   });
 }
 
-function sendMessage() {
-  const input = document.getElementById("chatInput");
-  const text = input.value.trim();
-  if (text === "") return;
-
-  const messagesRef = db.ref("messages");
-  messagesRef
-    .push({
-      text: text,
-      time: Date.now(),
-    })
-    .then(() => {
-      input.value = ""; // clear input
-    })
-    .catch((err) => {
-      console.error("Error sending message:", err);
-      alert("Failed to send message. Check your database rules!");
-    });
-}
-
-// Load messages when page is ready
-window.addEventListener("load", loadMessages);
-
-// =============================
-// 🎤 VOICE RECORDING
-// =============================
-let mediaRecorder;
-let audioChunks = [];
-const recordBtn = document.getElementById("recordBtn");
-const audioPlayback = document.getElementById("audioPlayback");
-
-if(recordBtn){
-  recordBtn.addEventListener("mousedown", startRecording);
-  recordBtn.addEventListener("mouseup", stopRecording);
-  recordBtn.addEventListener("touchstart", startRecording);
-  recordBtn.addEventListener("touchend", stopRecording);
-}
-
-function startRecording(){
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start();
-      audioChunks = [];
-      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-      mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks);
-        const audioUrl = URL.createObjectURL(audioBlob);
-        audioPlayback.src = audioUrl;
-      };
-    });
-}
-function stopRecording(){
-  if(mediaRecorder){
-    mediaRecorder.stop();
-  }
-}
-
-// =============================
-// 📲 INSTALL BUTTON
-// =============================
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e)=>{
-  e.preventDefault();
-  deferredPrompt = e;
-
-  const btn = document.createElement("button");
-  btn.innerText="Install App ❤️";
-  btn.style.position="fixed";
-  btn.style.bottom="20px";
-  btn.style.right="20px";
-  btn.style.padding="10px 20px";
-  btn.style.background="#ff4b7d";
-  btn.style.color="white";
-  btn.style.border="none";
-  btn.style.borderRadius="20px";
-
-  document.body.appendChild(btn);
-  btn.addEventListener("click", ()=>{
-    deferredPrompt.prompt();
+window.addEventListener('appinstalled', () => {
+  gtag('event', 'app_installed', {
+    event_category: 'PWA',
+    event_label: 'Love App'
   });
 });

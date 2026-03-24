@@ -406,9 +406,18 @@ function loadMessages() {
         audio.src = msg.voice;
         div.appendChild(audio);
       } else {
-        const text = document.createElement("span");
-        text.innerText = msg.text ? decrypt(msg.text) : "";
-        div.appendChild(text);
+       if(msg.text){
+  let decrypted;
+  try {
+    decrypted = decrypt(msg.text);
+  } catch(err){
+    console.warn("Failed to decrypt, showing raw text:", err);
+    decrypted = msg.text; // fallback
+  }
+  const text = document.createElement("span");
+  text.innerText = decrypted;
+  div.appendChild(text);
+}
       }
 
       // ✔✔ TICKS FOR CURRENT USER
@@ -431,19 +440,21 @@ function loadMessages() {
   });
 }
 // online/offline status
-const statusRef = db.ref("status");
+function sanitizeKey(key){
+  return key.replace(/[.#$[\]]/g, "-"); // replace forbidden characters
+}
 
 function setOnline(){
   if(!auth.currentUser) return;
-const user = auth.currentUser.email;
+  const userKey = sanitizeKey(auth.currentUser.email); // safe key
 
-  statusRef.child(user).set({
+  statusRef.child(userKey).set({
     online: true,
     lastSeen: Date.now()
   });
 
   window.addEventListener("beforeunload", () => {
-    statusRef.child(user).set({
+    statusRef.child(userKey).set({
       online: false,
       lastSeen: Date.now()
     });
@@ -493,11 +504,11 @@ function sendMessage(){
   const text = input.value.trim();
   if(text === "") return;
 
-  const username = localStorage.getItem("username") || "Anonymous";
+  const username = localStorage.getItem("username") || "Anonymous"; // use display name
 
   db.ref("messages").push({
     text: encrypt(text),
-    user: username,  // 👈 Use username
+    user: username,  // 👈 display name instead of email
     time: Date.now(),
     seen: false
   });

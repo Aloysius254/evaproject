@@ -1,3 +1,12 @@
+function login(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(()=>{})
+    .catch(()=> alert("Login failed ❌"));
+}
+
 if(!localStorage.getItem("user")){
   let name = prompt("Enter your name ❤️");
   localStorage.setItem("user", name || "me");
@@ -321,6 +330,26 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// 🔐 AUTH INIT
+const auth = firebase.auth();
+
+// 🔄 CHECK LOGIN STATE
+auth.onAuthStateChanged(user => {
+  const loginBox = document.getElementById("loginBox");
+  const chat = document.getElementById("chat");
+
+  if(user){
+    if(loginBox) loginBox.style.display = "none";
+    if(chat) chat.style.display = "block";
+
+    // ✅ use email as identity
+    localStorage.setItem("user", user.email);
+  } else {
+    if(loginBox) loginBox.style.display = "block";
+    if(chat) chat.style.display = "none";
+  }
+});
+
 // =============================
 // 💬 LOAD MESSAGES (REAL TIME)
 // =============================
@@ -334,7 +363,7 @@ function loadMessages() {
       const msg = child.val();
       const key = child.key;
 
-      const currentUser = localStorage.getItem("user");
+      const currentUser = auth.currentUser ? auth.currentUser.email : localStorage.getItem("user");
 
       // ✅ MAIN MESSAGE DIV
       const div = document.createElement("div");
@@ -356,7 +385,7 @@ function loadMessages() {
         div.appendChild(audio);
       } else {
         const text = document.createElement("span");
-        text.innerText = msg.text || "";
+        text.innerText = msg.text ? decrypt(msg.text) : "";
         div.appendChild(text);
       }
 
@@ -416,6 +445,18 @@ statusRef.on("value", (snapshot) => {
 });
 
 // =============================
+// 🔐 ENCRYPTION message
+const SECRET_KEY = "aloeva-secret-key"; // change this
+
+function encrypt(text){
+  return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
+}
+
+function decrypt(cipher){
+  const bytes = CryptoJS.AES.decrypt(cipher, SECRET_KEY);
+  return bytes.toString(CryptoJS.enc.Utf8);
+}
+
 // 📤 SEND MESSAGE
 // =============================
 function sendMessage() {
@@ -423,10 +464,9 @@ function sendMessage() {
   const text = input.value.trim();
   if (text === "") return;
 
-  const user = localStorage.getItem("user");
-
+ const user = auth.currentUser ? auth.currentUser.email : "me";
   db.ref("messages").push({
-    text: text,
+    text: encrypt(text),
     user: user,
     time: Date.now(),
     seen: false

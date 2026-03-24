@@ -343,6 +343,12 @@ auth.onAuthStateChanged(user => {
     
     // ✅ use email as identity
     localStorage.setItem("user", user.email);
+
+// 🔥 START CHAT HERE
+setTimeout(() => {
+  loadMessages();
+  setOnline();
+}, 300);
   } else {
     if(loginBox) loginBox.style.display = "block";
     if(chat) chat.style.display = "none";
@@ -362,7 +368,7 @@ function loadMessages() {
       const msg = child.val();
       const key = child.key;
 
-      const currentUser = auth.currentUser ? auth.currentUser.email : localStorage.getItem("user");
+     const currentUser = auth.currentUser.email;
 
       // ✅ MAIN MESSAGE DIV
       const div = document.createElement("div");
@@ -459,11 +465,14 @@ function decrypt(cipher){
 
 // 📤 SEND MESSAGE
 // =============================
-if(!auth.currentUser){
-  alert("Login first 🔒");
-  return;
-}
-function sendMessage() {
+
+function sendMessage(){
+  
+  if(!auth.currentUser){
+    alert("Login first 🔒");
+    return;
+  }
+    
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
   if (text === "") return;
@@ -481,22 +490,22 @@ function sendMessage() {
 // =============================
 // 🚀 LOAD CHAT
 // =============================
-window.addEventListener("load", () => {
-  loadMessages();
-  setOnline();
-});
 
 //user tying
 const typingRef = db.ref("typing");
 
-document.getElementById("chatInput").addEventListener("input", () => {
-  const user = localStorage.getItem("user");
-  typingRef.set({ user: user, typing: true });
+const chatInput = document.getElementById("chatInput");
 
-  setTimeout(() => {
-    typingRef.set({ user: user, typing: false });
-  }, 1500);
-});
+if(chatInput){
+  chatInput.addEventListener("input", () => {
+    const user = localStorage.getItem("user");
+    typingRef.set({ user: user, typing: true });
+
+    setTimeout(() => {
+      typingRef.set({ user: user, typing: false });
+    }, 1500);
+  });
+}
 
 //show typing on screen
 typingRef.on("value", (snapshot) => {

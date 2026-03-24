@@ -352,15 +352,22 @@ auth.onAuthStateChanged(user => {
   if(user){
     if(loginBox) loginBox.style.display = "none";
     if(chat) chat.style.display = "block";
-    
-    // ✅ use email as identity
-    localStorage.setItem("user", user.email);
 
-// 🔥 START CHAT HERE
-setTimeout(() => {
-  loadMessages();
-  setOnline();
-}, 300);
+    // ✅ Prompt for username if not saved yet
+    let username = localStorage.getItem("username");
+    if(!username){
+      username = prompt("Enter your display name ❤️") || "Anonymous";
+      localStorage.setItem("username", username);
+
+      // Optional: store in DB for your reference
+      db.ref("users/" + user.uid).set({ name: username });
+    }
+
+    // Start chat
+    setTimeout(() => {
+      loadMessages();
+      setOnline();
+    }, 300);
   } else {
     if(loginBox) loginBox.style.display = "block";
     if(chat) chat.style.display = "none";
@@ -376,25 +383,23 @@ function loadMessages() {
   db.ref("messages").on("value", (snapshot) => {
     chatBox.innerHTML = "";
 
+    const currentUser = localStorage.getItem("username"); // 👈 current username
+
     snapshot.forEach((child) => {
       const msg = child.val();
       const key = child.key;
 
-     const currentUser = auth.currentUser.email;
-
-      // ✅ MAIN MESSAGE DIV
       const div = document.createElement("div");
       div.className = (msg.user === currentUser) ? "sent" : "received";
 
-      // 👤 SENDER NAME
+      // 👤 DISPLAY NAME
       const name = document.createElement("small");
       name.style.fontWeight = "bold";
       name.style.display = "block";
-      name.innerText = msg.user || "Unknown";
-
+      name.innerText = msg.user || "Anonymous";
       div.appendChild(name);
 
-      // 💬 MESSAGE CONTENT (text or voice)
+      // 💬 TEXT OR VOICE
       if(msg.voice){
         const audio = document.createElement("audio");
         audio.controls = true;
@@ -479,20 +484,20 @@ function decrypt(cipher){
 // =============================
 
 function sendMessage(){
-  
   if(!auth.currentUser){
     alert("Login first 🔒");
     return;
   }
-    
+
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
-  if (text === "") return;
+  if(text === "") return;
 
- const user = auth.currentUser ? auth.currentUser.email : "me";
+  const username = localStorage.getItem("username") || "Anonymous";
+
   db.ref("messages").push({
     text: encrypt(text),
-    user: user,
+    user: username,  // 👈 Use username
     time: Date.now(),
     seen: false
   });

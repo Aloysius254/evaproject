@@ -185,7 +185,7 @@ function createHeart(){
   document.body.appendChild(heart);
   setTimeout(()=>heart.remove(),6000);
 }
-setInterval(createHeart,500);
+setInterval(createHeart,1500);
 
 // =============================
 // 🖼️ LIGHTBOX
@@ -268,50 +268,59 @@ auth.onAuthStateChanged(user=>{
 // =============================
 // 💬 LOAD MESSAGES
 // =============================
-function loadMessages(){
-  const chatBox=document.getElementById("chatBox");
-  db.ref("messages").on("value", snapshot=>{
-    chatBox.innerHTML="";
-    const currentUser=localStorage.getItem("username");
-    snapshot.forEach(child=>{
-      const msg=child.val(), key=child.key;
-      const div=document.createElement("div");
-      div.className=(msg.user===currentUser)?"sent":"received";
+function loadMessages() {
+  const chatBox = document.getElementById("chatBox");
+  const currentUser = localStorage.getItem("username");
 
-      const name=document.createElement("small");
-      name.style.fontWeight="bold";
-      name.style.display="block";
-      name.innerText=msg.user||"Anonymous";
-      div.appendChild(name);
+  db.ref("messages").on("child_added", (snapshot) => {
+    const msg = snapshot.val();
+    const key = snapshot.key;
 
-      if(msg.voice){
-        const audio=document.createElement("audio");
-        audio.controls=true;
-        audio.src=msg.voice;
-        div.appendChild(audio);
-      } else if(msg.text){
-        let decrypted;
-        try { decrypted=decrypt(msg.text); } catch(e){ decrypted=msg.text; console.warn("Failed to decrypt:", e);}
-        const text=document.createElement("span");
-        text.innerText=decrypted;
-        div.appendChild(text);
+    const div = document.createElement("div");
+    div.className = (msg.user === currentUser) ? "sent" : "received";
+
+    // 👤 NAME
+    const name = document.createElement("small");
+    name.style.fontWeight = "bold";
+    name.style.display = "block";
+    name.innerText = msg.user || "Anonymous";
+    div.appendChild(name);
+
+    // 💬 MESSAGE
+    if(msg.voice){
+      const audio = document.createElement("audio");
+      audio.controls = true;
+      audio.src = msg.voice;
+      div.appendChild(audio);
+    } else if(msg.text){
+      let decrypted;
+      try {
+        decrypted = decrypt(msg.text);
+      } catch {
+        decrypted = msg.text;
       }
 
-      if(msg.user===currentUser){
-        const tick=document.createElement("small");
-        tick.style.marginLeft="5px";
-        tick.innerText=msg.seen?"✔✔":"✔";
-        div.appendChild(tick);
-      }
+      const text = document.createElement("span");
+      text.innerText = decrypted;
+      div.appendChild(text);
+    }
 
-      if(msg.user!==currentUser && !msg.seen) db.ref("messages/"+key).update({seen:true});
+    // ✔✔ ticks
+    if(msg.user === currentUser){
+      const tick = document.createElement("small");
+      tick.innerText = msg.seen ? "✔✔" : "✔";
+      div.appendChild(tick);
+    }
 
-      chatBox.appendChild(div);
-    });
-    chatBox.scrollTop=chatBox.scrollHeight;
+    // mark seen
+    if(msg.user !== currentUser && !msg.seen){
+      db.ref("messages/" + key).update({ seen: true });
+    }
+
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
   });
 }
-
 // =============================
 // 🌐 ONLINE/OFFLINE STATUS
 // =============================
@@ -349,7 +358,7 @@ function decrypt(cipher){ return CryptoJS.AES.decrypt(cipher,SECRET_KEY).toStrin
 function sendMessage(){
   if(!auth.currentUser){ alert("Login first 🔒"); return; }
   const input=document.getElementById("chatInput");
-  const text=input.value.trim();
+.  const text=input.value.trim();
   if(!text) return;
   const username=localStorage.getItem("username")||"Anonymous";
   db.ref("messages").push({ text:encrypt(text), user:username, time:Date.now(), seen:false });
@@ -363,9 +372,9 @@ const typingRef=db.ref("typing");
 const chatInput=document.getElementById("chatInput");
 if(chatInput){
   chatInput.addEventListener("input", ()=>{
-    const user=localStorage.getItem("username");
-    typingRef.set({ user:user, typing:true });
-    setTimeout(()=>{ typingRef.set({ user:user, typing:false }); },1500);
+    const user = sanitizeKey(localStorage.getItem("username"));
+    typingRef.child(user).set({ typing: true });
+    setTimeout(()=>{ typingRef.child(user).set({ typing: false }); },1500);
   });
 }
 typingRef.on("value", snapshot=>{

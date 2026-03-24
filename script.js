@@ -481,6 +481,33 @@ function flipCard(el){
     document.getElementById("final").style.display="block";
   },1000);
 }
+// change user name
+function changeUsername(){
+  let newName = prompt("Enter new name ❤️");
+
+  if(!newName || newName.trim() === ""){
+    alert("Name cannot be empty ❌");
+    return;
+  }
+
+  newName = newName.trim();
+
+  // Save locally
+  localStorage.setItem("username", newName);
+
+  // OPTIONAL: update Firebase profile
+  if(auth.currentUser){
+    db.ref("users/" + auth.currentUser.uid).update({
+      name: newName
+    });
+  }
+
+  alert("Name updated to " + newName + " ✅");
+
+  // reload messages so new name applies
+  document.getElementById("chatBox").innerHTML = "";
+  loadMessages();
+}
 
 // =============================
 // 📲 SERVICE WORKER

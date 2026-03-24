@@ -4,7 +4,10 @@ function login(){
 
   auth.signInWithEmailAndPassword(email, password)
     .then(()=>{})
-    .catch(()=> alert("Login failed ❌"));
+    .catch((error)=> {
+  console.log(error); // 👈 shows real error in console
+  alert(error.message); // 👈 shows exact reason
+});
 }
 
 if(!localStorage.getItem("user")){

@@ -1,3 +1,12 @@
+
+function register(){
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(()=> alert("Account created ❤️"))
+    .catch(err => alert(err.message));
+}
 function login(){
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;

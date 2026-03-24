@@ -39,6 +39,7 @@ function initApp(){
   initLightboxSwipe();
   initServiceWorker();
   initInstallPrompt();
+  displayMyName();
 }
 
 // =============================
@@ -280,6 +281,61 @@ const statusRef = db.ref("status");
 // sanitize Firebase key
 function sanitizeKey(key){ return key.replace(/[.#$[\]]/g,"-"); }
 
+// =============================
+// 👤 PROFILE SYSTEM (NEW)
+// =============================
+const DEFAULT_PIC = "https://i.imgur.com/6VBx3io.png";
+
+function displayMyName(){
+  const name = localStorage.getItem("username") || "Anonymous";
+  const el = document.getElementById("myName");
+  if(el) el.innerText = "👤 " + name;
+}
+
+async function setUsernameUnique(){
+  let username = prompt("Choose a username ❤️");
+
+  if(!username) return setUsernameUnique();
+
+  username = username.trim();
+
+  const snapshot = await db.ref("usernames/" + username).once("value");
+
+  if(snapshot.exists()){
+    alert("Name already taken ❌");
+    return setUsernameUnique();
+  }
+
+  localStorage.setItem("username", username);
+
+  db.ref("usernames/" + username).set(true);
+
+  if(auth.currentUser){
+    db.ref("users/" + auth.currentUser.uid).set({
+      name: username,
+      photo: DEFAULT_PIC
+    });
+  }
+
+  displayMyName();
+
+  //change profile picture
+  function changePhoto(){
+  let url = prompt("Paste image URL 📷");
+
+  if(!url) return;
+
+  localStorage.setItem("photo", url);
+
+  if(auth.currentUser){
+    db.ref("users/" + auth.currentUser.uid).update({
+      photo: url
+    });
+  }
+
+  alert("Profile updated ✅");
+}
+
 // 🔄 CHECK LOGIN STATE
 auth.onAuthStateChanged(user=>{
   const loginBox=document.getElementById("loginBox");
@@ -288,12 +344,13 @@ auth.onAuthStateChanged(user=>{
     if(loginBox) loginBox.style.display="none";
     if(chat) chat.style.display="block";
 
-    let username=localStorage.getItem("username");
-    if(!username){
-      username=prompt("Enter your display name ❤️")||"Anonymous";
-      localStorage.setItem("username",username);
-      db.ref("users/"+user.uid).set({ name: username });
-    }
+    let username = localStorage.getItem("username");
+
+if(!username){
+  setUsernameUnique(); // 🔥 NEW
+} else {
+  displayMyName(); // 🔥 NEW
+}
     setTimeout(()=>{ loadMessages(); setOnline(); },300);
   } else {
     if(loginBox) loginBox.style.display="block";
@@ -314,6 +371,17 @@ function loadMessages(){
       const div=document.createElement("div");
       div.className=(msg.user===currentUser)?"sent":"received";
 
+
+      // 👤 PROFILE IMAGE (NEW)
+const img = document.createElement("img");
+img.src = msg.photo || DEFAULT_PIC;
+img.style.width = "30px";
+img.style.height = "30px";
+img.style.borderRadius = "50%";
+img.style.marginRight = "5px";
+
+div.appendChild(img);
+      
       const name=document.createElement("small");
       name.style.fontWeight="bold";
       name.style.display="block";
@@ -388,7 +456,15 @@ function sendMessage(){
   const text=input.value.trim();
   if(!text) return;
   const username=localStorage.getItem("username")||"Anonymous";
-  db.ref("messages").push({ text:encrypt(text), user:username, time:Date.now(), seen:false });
+ const photo = localStorage.getItem("photo") || DEFAULT_PIC;
+
+db.ref("messages").push({
+  text:encrypt(text),
+  user:username,
+  photo:photo, // 🔥 NEW
+  time:Date.now(),
+  seen:false
+});
   input.value="";
 }
 

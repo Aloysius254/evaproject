@@ -446,7 +446,7 @@ statusRef.on("value", (snapshot) => {
 
 // =============================
 // 🔐 ENCRYPTION message
-const SECRET_KEY = "aloeva-secret-key"; // change this
+const SECRET_KEY = "aloeva123."; // change this
 
 function encrypt(text){
   return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();

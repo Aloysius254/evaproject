@@ -358,7 +358,7 @@ function decrypt(cipher){ return CryptoJS.AES.decrypt(cipher,SECRET_KEY).toStrin
 function sendMessage(){
   if(!auth.currentUser){ alert("Login first 🔒"); return; }
   const input=document.getElementById("chatInput");
-.  const text=input.value.trim();
+  const text=input.value.trim();
   if(!text) return;
   const username=localStorage.getItem("username")||"Anonymous";
   db.ref("messages").push({ text:encrypt(text), user:username, time:Date.now(), seen:false });

@@ -6,9 +6,7 @@ const firebaseConfig = {
   authDomain: "aloeva-chatbot.firebaseapp.com",
   databaseURL: "https://aloeva-chatbot-default-rtdb.firebaseio.com",
   projectId: "aloeva-chatbot",
-  storageBucket: "aloeva-chatbot.firebasestorage.app",
-  messagingSenderId: "216931642104",
-  appId: "1:216931642104:web:68522fe6c57aa79565a90d"
+  storageBucket: "aloeva-chatbot.firebasestorage.app"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -18,26 +16,19 @@ const auth = firebase.auth();
 const statusRef = db.ref("status");
 
 // =============================
-// 🧹 FIX INVALID FIREBASE KEYS
-// =============================
-function sanitizeKey(key){
-  return key.replace(/[.#$[\]]/g, "-");
-}
-
-// =============================
-// 👤 USERNAME FIX
+// 👤 USERNAME
 // =============================
 if(!localStorage.getItem("username")){
-  let name = prompt("Enter your name ❤️");
+  const name = prompt("Enter your name ❤️");
   localStorage.setItem("username", name || "Anonymous");
 }
 
 // =============================
-// 🔄 LOGIN / REGISTER
+// 🔄 AUTH
 // =============================
 function register(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const email = emailInput.value;
+  const password = passwordInput.value;
 
   auth.createUserWithEmailAndPassword(email, password)
     .then(()=> alert("Account created ❤️"))
@@ -45,71 +36,48 @@ function register(){
 }
 
 function login(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const email = emailInput.value;
+  const password = passwordInput.value;
 
   auth.signInWithEmailAndPassword(email, password)
     .catch(err => alert(err.message));
 }
 
-// =============================
-// 🔄 AUTH STATE
-// =============================
 auth.onAuthStateChanged(user=>{
-  const loginBox = document.getElementById("loginBox");
-  const chat = document.getElementById("chat");
+  document.getElementById("loginBox").style.display = user ? "none" : "block";
+  document.getElementById("chat").style.display = user ? "block" : "none";
 
   if(user){
-    loginBox.style.display = "none";
-    chat.style.display = "block";
-
     setOnline();
     loadMessages();
-  } else {
-    loginBox.style.display = "block";
-    chat.style.display = "none";
   }
 });
 
 // =============================
-// 💬 LOAD MESSAGES
+// 💬 LOAD MESSAGES (FAST)
 // =============================
 function loadMessages(){
   const chatBox = document.getElementById("chatBox");
   const currentUser = localStorage.getItem("username");
 
-  db.ref("messages").on("child_added", snapshot=>{
+  db.ref("messages").limitToLast(50).on("child_added", snapshot=>{
     const msg = snapshot.val();
     const key = snapshot.key;
 
     const div = document.createElement("div");
-    div.className = (msg.user === currentUser) ? "sent" : "received";
+    div.className = msg.user === currentUser ? "sent" : "received";
 
     // NAME
     const name = document.createElement("small");
     name.innerText = msg.user || "Anonymous";
     name.style.fontWeight = "bold";
-    name.style.display = "block";
+
+    // TEXT
+    const text = document.createElement("span");
+    text.innerText = decryptSafe(msg.text);
 
     div.appendChild(name);
-
-    // MESSAGE
-    if(msg.voice){
-      const audio = document.createElement("audio");
-      audio.controls = true;
-      audio.src = msg.voice;
-      div.appendChild(audio);
-    } else {
-      let textValue = msg.text;
-
-      try {
-        textValue = decrypt(msg.text);
-      } catch {}
-
-      const text = document.createElement("span");
-      text.innerText = textValue;
-      div.appendChild(text);
-    }
+    div.appendChild(text);
 
     // ✔✔
     if(msg.user === currentUser){
@@ -118,9 +86,9 @@ function loadMessages(){
       div.appendChild(tick);
     }
 
-    // mark seen
+    // seen
     if(msg.user !== currentUser && !msg.seen){
-      db.ref("messages/" + key).update({ seen:true });
+      db.ref("messages/"+key).update({seen:true});
     }
 
     chatBox.appendChild(div);
@@ -129,165 +97,137 @@ function loadMessages(){
 }
 
 // =============================
-// 📤 SEND MESSAGE (FIXED)
+// 📤 SEND MESSAGE
 // =============================
 function sendMessage(){
-  if(!auth.currentUser){
-    alert("Login first 🔒");
-    return;
-  }
+  if(!auth.currentUser) return alert("Login first");
 
   const input = document.getElementById("chatInput");
   const text = input.value.trim();
 
   if(!text) return;
 
-  const username = localStorage.getItem("username");
-
   db.ref("messages").push({
     text: encrypt(text),
-    user: username,
-    time: Date.now(),
-    seen: false
+    user: localStorage.getItem("username"),
+    seen: false,
+    time: Date.now()
   });
 
   input.value = "";
 }
 
 // =============================
-// 🔐 ENCRYPTION
+// 🔐 ENCRYPTION SAFE
 // =============================
-const SECRET_KEY = "aloeva123.";
+const KEY = "aloeva123";
 
-function encrypt(text){
-  return CryptoJS.AES.encrypt(text, SECRET_KEY).toString();
+function encrypt(txt){
+  return CryptoJS.AES.encrypt(txt, KEY).toString();
 }
 
-function decrypt(cipher){
-  return CryptoJS.AES.decrypt(cipher, SECRET_KEY).toString(CryptoJS.enc.Utf8);
+function decryptSafe(txt){
+  try{
+    return CryptoJS.AES.decrypt(txt, KEY).toString(CryptoJS.enc.Utf8) || txt;
+  }catch{
+    return txt;
+  }
 }
 
 // =============================
 // 🌐 ONLINE STATUS
 // =============================
 function setOnline(){
-  const email = auth.currentUser.email;
-  const userKey = sanitizeKey(email);
+  const key = auth.currentUser.email.replace(/[.#$[\]]/g, "-");
 
-  statusRef.child(userKey).set({
-    online: true,
-    lastSeen: Date.now()
+  statusRef.child(key).set({
+    online:true,
+    lastSeen:Date.now()
   });
 
   window.addEventListener("beforeunload", ()=>{
-    statusRef.child(userKey).set({
-      online: false,
-      lastSeen: Date.now()
+    statusRef.child(key).set({
+      online:false,
+      lastSeen:Date.now()
     });
   });
 }
 
 // =============================
-// ✍️ TYPING (FIXED)
+// ✍️ TYPING
 // =============================
 const typingRef = db.ref("typing");
 
-const chatInput = document.getElementById("chatInput");
+chatInput.addEventListener("input", ()=>{
+  const user = localStorage.getItem("username");
 
-if(chatInput){
-  chatInput.addEventListener("input", ()=>{
-    const user = sanitizeKey(localStorage.getItem("username"));
+  typingRef.set({user, typing:true});
 
-    typingRef.child(user).set({ typing:true });
+  setTimeout(()=>{
+    typingRef.set({user, typing:false});
+  },1500);
+});
 
-    setTimeout(()=>{
-      typingRef.child(user).set({ typing:false });
-    },1500);
-  });
-}
+typingRef.on("value", snap=>{
+  const data = snap.val();
+  const div = document.getElementById("typingStatus");
 
-typingRef.on("value", snapshot=>{
-  const data = snapshot.val();
-  const typingDiv = document.getElementById("typingStatus");
-  const currentUser = sanitizeKey(localStorage.getItem("username"));
-
-  let typingUser = "";
-
-  for(let user in data){
-    if(user !== currentUser && data[user].typing){
-      typingUser = user;
-    }
+  if(data && data.typing && data.user !== localStorage.getItem("username")){
+    div.innerText = data.user + " is typing...";
+  } else {
+    div.innerText = "";
   }
-
-  typingDiv.innerText = typingUser ? typingUser + " is typing..." : "";
 });
 
 // =============================
-// 🎤 VOICE (SAFE VERSION)
+// 🖼️ SLIDESHOW (FIXED)
 // =============================
-let mediaRecorder, audioChunks = [];
-
-function startRecording(){
-  navigator.mediaDevices.getUserMedia({audio:true})
-    .then(stream=>{
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start();
-      audioChunks = [];
-
-      mediaRecorder.ondataavailable = e=>{
-        audioChunks.push(e.data);
-      };
-    });
-}
-
-function stopRecording(){
-  if(!mediaRecorder) return;
-
-  mediaRecorder.stop();
-
-  mediaRecorder.onstop = ()=>{
-    const blob = new Blob(audioChunks, { type:"audio/webm" });
-
-    // ⚠️ STORAGE DISABLED (FREE PLAN ISSUE)
-    alert("Voice upload needs Firebase Blaze plan ⚠️");
-  };
-}
-
-// =============================
-// 🖼️ LIGHTBOX (FIXED)
-// =============================
-let currentIndex = 0;
+let images = [];
+let index = 0;
 
 function openLightbox(img){
+  images = Array.from(document.querySelectorAll(".gallery img"));
+  index = images.indexOf(img);
+
+  if(index < 0) index = 0;
+
   const box = document.getElementById("lightbox");
   const image = document.getElementById("lightbox-img");
 
   box.style.display = "flex";
-  image.src = img.src;
+  image.src = images[index].src;
+}
 
-  const images = document.querySelectorAll(".gallery img");
-  currentIndex = Array.from(images).indexOf(img);
+function nextImage(){
+  if(images.length === 0) return;
+
+  index = (index + 1) % images.length;
+  document.getElementById("lightbox-img").src = images[index].src;
+}
+
+function prevImage(){
+  if(images.length === 0) return;
+
+  index = (index - 1 + images.length) % images.length;
+  document.getElementById("lightbox-img").src = images[index].src;
 }
 
 function closeLightbox(){
   document.getElementById("lightbox").style.display = "none";
 }
 
-function nextImage(){
-  const images = document.querySelectorAll(".gallery img");
+// =============================
+// ❤️ PERFORMANCE FIX
+// =============================
+setInterval(createHeart,1500);
 
-  currentIndex = (currentIndex + 1) % images.length;
+function createHeart(){
+  const heart = document.createElement("div");
+  heart.innerHTML = "❤️";
+  heart.className = "heart";
+  heart.style.left = Math.random()*100 + "vw";
 
-  document.getElementById("lightbox-img").src =
-    images[currentIndex].src;
-}
+  document.body.appendChild(heart);
 
-function prevImage(){
-  const images = document.querySelectorAll(".gallery img");
-
-  currentIndex =
-    (currentIndex - 1 + images.length) % images.length;
-
-  document.getElementById("lightbox-img").src =
-    images[currentIndex].src;
+  setTimeout(()=>heart.remove(),4000);
 }

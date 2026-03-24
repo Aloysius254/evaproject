@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
 function initApp(){
   showSection("home");
   updateCounter();
-  loadMessages();
   initComments();
   initLightboxSwipe();
   initServiceWorker();
@@ -43,7 +42,7 @@ function handleRatingVisibility(section){
   }
 }
 
-function showSection(id){
+window.showSection = function(id){
   const sections = document.querySelectorAll("section");
 
   sections.forEach(sec=>{
@@ -341,7 +340,7 @@ auth.onAuthStateChanged(user => {
   if(user){
     if(loginBox) loginBox.style.display = "none";
     if(chat) chat.style.display = "block";
-
+    
     // ✅ use email as identity
     localStorage.setItem("user", user.email);
   } else {
@@ -412,7 +411,8 @@ function loadMessages() {
 const statusRef = db.ref("status");
 
 function setOnline(){
-  const user = localStorage.getItem("user");
+  if(!auth.currentUser) return;
+const user = auth.currentUser.email;
 
   statusRef.child(user).set({
     online: true,
@@ -459,6 +459,10 @@ function decrypt(cipher){
 
 // 📤 SEND MESSAGE
 // =============================
+if(!auth.currentUser){
+  alert("Login first 🔒");
+  return;
+}
 function sendMessage() {
   const input = document.getElementById("chatInput");
   const text = input.value.trim();

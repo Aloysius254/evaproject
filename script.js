@@ -317,7 +317,7 @@ async function setUsernameUnique(){
     });
   }
 
-} // ✅ ONLY ONE closing bracket
+
 
 if(!username){
   setUsernameUnique(); // 🔥 NEW

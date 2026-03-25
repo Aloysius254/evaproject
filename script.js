@@ -316,9 +316,8 @@ async function setUsernameUnique(){
       photo: DEFAULT_PIC
     });
   }
-displayMyName();
-}
 
+} // ✅ ONLY ONE closing bracket
 
 if(!username){
   setUsernameUnique(); // 🔥 NEW

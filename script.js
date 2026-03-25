@@ -316,34 +316,9 @@ async function setUsernameUnique(){
       photo: DEFAULT_PIC
     });
   }
-
-
-  //change profile picture
-  function changePhoto(){
-  let url = prompt("Paste image URL 📷");
-
-  if(!url) return;
-
-  localStorage.setItem("photo", url);
-
-  if(auth.currentUser){
-    db.ref("users/" + auth.currentUser.uid).update({
-      photo: url
-    });
-  }
-
-  alert("Profile updated ✅");
+displayMyName();
 }
 
-// 🔄 CHECK LOGIN STATE
-auth.onAuthStateChanged(user=>{
-  const loginBox=document.getElementById("loginBox");
-  const chat=document.getElementById("chat");
-  if(user){
-    if(loginBox) loginBox.style.display="none";
-    if(chat) chat.style.display="block";
-
-    let username = localStorage.getItem("username");
 
 if(!username){
   setUsernameUnique(); // 🔥 NEW
@@ -356,6 +331,16 @@ if(!username){
     if(chat) chat.style.display="none";
   }
 });
+
+// 🔄 CHECK LOGIN STATE
+auth.onAuthStateChanged(user=>{
+  const loginBox=document.getElementById("loginBox");
+  const chat=document.getElementById("chat");
+  if(user){
+    if(loginBox) loginBox.style.display="none";
+    if(chat) chat.style.display="block";
+
+    let username = localStorage.getItem("username");
 
 // =============================
 // 💬 LOAD MESSAGES
@@ -414,7 +399,22 @@ div.appendChild(img);
     chatBox.scrollTop=chatBox.scrollHeight;
   });
 }
+ //change profile picture
+  function changePhoto(){
+  let url = prompt("Paste image URL 📷");
 
+  if(!url) return;
+
+  localStorage.setItem("photo", url);
+
+  if(auth.currentUser){
+    db.ref("users/" + auth.currentUser.uid).update({
+      photo: url
+    });
+  }
+
+  alert("Profile updated ✅");
+}
 // =============================
 // 🌐 ONLINE/OFFLINE STATUS
 // =============================

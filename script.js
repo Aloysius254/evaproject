@@ -317,20 +317,30 @@ async function setUsernameUnique(){
     });
   }
 
-
-
-
-
 // 🔄 CHECK LOGIN STATE
-auth.onAuthStateChanged(user=>{
-  const loginBox=document.getElementById("loginBox");
-  const chat=document.getElementById("chat");
+auth.onAuthStateChanged(user => {
+  const loginBox = document.getElementById("loginBox");
+  const chat = document.getElementById("chat");
+
   if(user){
-    if(loginBox) loginBox.style.display="none";
-    if(chat) chat.style.display="block";
+    if(loginBox) loginBox.style.display = "none";
+    if(chat) chat.style.display = "block";
 
     let username = localStorage.getItem("username");
 
+    if(!username){
+      setUsernameUnique();
+    } else {
+      displayMyName();
+      loadMessages();
+      setOnline();
+    }
+
+  } else {
+    if(loginBox) loginBox.style.display = "block";
+    if(chat) chat.style.display = "none";
+  }
+});
 // =============================
 // 💬 LOAD MESSAGES
 // =============================

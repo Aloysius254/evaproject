@@ -319,17 +319,7 @@ async function setUsernameUnique(){
 
 
 
-if(!username){
-  setUsernameUnique(); // 🔥 NEW
-} else {
-  displayMyName(); // 🔥 NEW
-}
-    setTimeout(()=>{ loadMessages(); setOnline(); },300);
-  } else {
-    if(loginBox) loginBox.style.display="block";
-    if(chat) chat.style.display="none";
-  }
-});
+
 
 // 🔄 CHECK LOGIN STATE
 auth.onAuthStateChanged(user=>{

@@ -317,7 +317,6 @@ async function setUsernameUnique(){
     });
   }
 
-  displayMyName();
 
   //change profile picture
   function changePhoto(){

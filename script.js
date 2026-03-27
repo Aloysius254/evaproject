@@ -594,7 +594,11 @@ function loadAdminUsers(){
         `;
         list.appendChild(card);
       });
+    }, err => {
+      list.innerHTML = `<p class="admin-loading">Status error: ${err.message}</p>`;
     });
+  }, err => {
+    list.innerHTML = `<p class="admin-loading" style="color:#ff6b6b;">❌ ${err.message}<br><small>Fix Firebase rules to allow authenticated reads on /users</small></p>`;
   });
 }
 

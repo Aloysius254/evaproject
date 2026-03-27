@@ -237,7 +237,7 @@
     <div id="chat" style="display:none;">
     <p class="chat-section-title">💬 Our Private Chat</p>
 
-    <div class="chat-header">
+    <div class="chat-header" onclick="openProfileModal()">
       <img id="profilePhoto" src="images/icon.png" alt="Profile photo">
       <div class="chat-header-info">
         <span id="displayName">Eva ❤️</span>
@@ -257,7 +257,8 @@
       <button id="recordBtn">🎤 Hold to Record</button>
       <button onclick="changeUsername()">✏️ Name</button>
       <button onclick="changePhoto()">📷 Photo</button>
-      <button onclick="logout()" style="background:rgba(255,50,50,0.3)!important;">🚪 Logout</button>
+      <button onclick="logout()" class="btn-danger">🚪 Logout</button>
+      <button id="adminDeleteBtn" onclick="adminDeleteChats()" class="btn-danger" style="display:none;">�️ Clear Chats</button>
       <span id="recordStatus"></span>
       <input type="file" id="photoInput" accept="image/*" style="display:none">
     </div>
@@ -265,6 +266,16 @@
   </div> <!-- end .chat-container -->
 
 </section>
+
+<!-- PROFILE VIEWER MODAL -->
+<div id="profileModal" style="display:none;" role="dialog" aria-modal="true">
+  <div class="profile-modal-inner">
+    <button class="profile-modal-close" onclick="closeProfileModal()">✕</button>
+    <img id="profileModalPhoto" src="images/icon.png" alt="Profile photo">
+    <p id="profileModalName"></p>
+    <button onclick="changePhoto()">📷 Change Photo</button>
+  </div>
+</div>
 
 <!-- POPUP -->
 <div id="popup" class="popup" role="dialog" aria-modal="true">

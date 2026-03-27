@@ -262,7 +262,7 @@ auth.onAuthStateChanged(user=>{
       localStorage.setItem("username",username);
       db.ref("users/"+user.uid).set({ name: username });
     }
-    setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); },300);
+    setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); checkAdminAccess(user); },300);
   } else {
     if(loginBox) loginBox.style.display="block";
     if(chat) chat.style.display="none";
@@ -449,6 +449,53 @@ function stopRecording(){
 }
 
 // =============================
+// 👤 PROFILE MODAL
+// =============================
+function openProfileModal(){
+  const modal = document.getElementById("profileModal");
+  const modalPhoto = document.getElementById("profileModalPhoto");
+  const modalName = document.getElementById("profileModalName");
+  const currentPhoto = document.getElementById("profilePhoto");
+  const currentName = document.getElementById("displayName");
+  if(!modal) return;
+  modalPhoto.src = currentPhoto.src;
+  modalName.textContent = currentName.textContent;
+  modal.style.display = "flex";
+}
+
+function closeProfileModal(){
+  const modal = document.getElementById("profileModal");
+  if(modal) modal.style.display = "none";
+}
+
+// close modal on backdrop click
+document.addEventListener("click", e => {
+  const modal = document.getElementById("profileModal");
+  if(modal && e.target === modal) closeProfileModal();
+});
+
+// =============================
+// 🗑️ ADMIN DELETE CHATS
+// =============================
+const ADMIN_EMAIL = "aloysiusmworia@gmail.com";
+
+function checkAdminAccess(user){
+  const btn = document.getElementById("adminDeleteBtn");
+  if(!btn) return;
+  btn.style.display = (user && user.email === ADMIN_EMAIL) ? "inline-block" : "none";
+}
+
+function adminDeleteChats(){
+  if(!auth.currentUser || auth.currentUser.email !== ADMIN_EMAIL){
+    alert("Access denied ❌"); return;
+  }
+  if(!confirm("Delete ALL chat messages? This cannot be undone.")) return;
+  db.ref("messages").remove()
+    .then(()=> alert("All chats cleared ✔"))
+    .catch(err => alert("Error: " + err.message));
+}
+
+// =============================
 // 🚪 LOGOUT
 // =============================
 function logout(){
@@ -495,6 +542,9 @@ function changePhoto(){
       // update visible profile photo
       const img=document.getElementById("profilePhoto");
       if(img) img.src=url;
+      // also update modal if open
+      const modalPhoto=document.getElementById("profileModalPhoto");
+      if(modalPhoto) modalPhoto.src=url;
       if(photoStatus) photoStatus.textContent="Photo updated ✔";
       setTimeout(()=>{ if(photoStatus) photoStatus.textContent=""; },2000);
     } catch(err){

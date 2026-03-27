@@ -397,6 +397,9 @@ if(chatInput){
     typingRef.set({ user:user, typing:true });
     setTimeout(()=>{ typingRef.set({ user:user, typing:false }); },1500);
   });
+  chatInput.addEventListener("keydown", e=>{
+    if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+  });
 }
 typingRef.on("value", snapshot=>{
   const data=snapshot.val();

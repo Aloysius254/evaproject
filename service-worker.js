@@ -1,4 +1,4 @@
-const CACHE = "aloeva-v1";
+const CACHE = "aloeva-v3";
 const ASSETS = [
   "./",
   "./index.html",

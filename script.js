@@ -327,10 +327,29 @@ auth.onAuthStateChanged(user=>{
       localStorage.setItem("username",username);
       db.ref("users/"+user.uid).set({ name: username, email: user.email });
     } else {
-      // always keep email up to date
       db.ref("users/"+user.uid).update({ email: user.email });
     }
     setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); checkAdminAccess(user); },300);
+
+    // listen for this user's block status in real time
+    db.ref("settings/blockedUsers/"+user.uid).on("value", snap => {
+      const isBlocked = snap.val() === true;
+      const chatInput = document.getElementById("chatInput");
+      const sendBtn = document.querySelector(".chat-input button");
+      const recordBtn = document.getElementById("recordBtn");
+      const blockedMsg = document.getElementById("chatBlockedMsg");
+      if(isBlocked){
+        if(chatInput) chatInput.disabled = true;
+        if(sendBtn) sendBtn.disabled = true;
+        if(recordBtn) recordBtn.disabled = true;
+        if(blockedMsg) blockedMsg.style.display = "block";
+      } else {
+        if(chatInput) chatInput.disabled = false;
+        if(sendBtn) sendBtn.disabled = false;
+        if(recordBtn) recordBtn.disabled = false;
+        if(blockedMsg) blockedMsg.style.display = "none";
+      }
+    });
   } else {
     if(loginBox) loginBox.style.display="block";
     if(chat) chat.style.display="none";
@@ -448,12 +467,13 @@ function sendMessage(){
   if(!auth.currentUser){ alert("Login first 🔒"); return; }
   const chatLock = document.getElementById("chatLock");
   if(chatLock && chatLock.style.display !== "none"){ alert("Chat is locked by admin 🔒"); return; }
-  const input=document.getElementById("chatInput");
-  const text=input.value.trim();
+  const chatInput = document.getElementById("chatInput");
+  if(chatInput && chatInput.disabled){ alert("You have been restricted from chatting 🚫"); return; }
+  const text = chatInput.value.trim();
   if(!text) return;
-  const username=localStorage.getItem("username")||"Anonymous";
+  const username = localStorage.getItem("username")||"Anonymous";
   db.ref("messages").push({ text:encrypt(text), user:username, time:Date.now(), seen:false });
-  input.value="";
+  chatInput.value = "";
 }
 
 // =============================
@@ -605,37 +625,64 @@ function loadAdminUsers(){
   const list = document.getElementById("adminUserList");
   if(!list) return;
   list.innerHTML = '<p class="admin-loading">Loading...</p>';
-  db.ref("users").once("value", snap => {
-    const data = snap.val();
-    if(!data){ list.innerHTML = '<p class="admin-loading">No users found.</p>'; return; }
-    list.innerHTML = "";
-    db.ref("status").once("value", statusSnap => {
-      const statuses = statusSnap.val() || {};
-      Object.entries(data).forEach(([uid, user]) => {
-        const emailKey = user.email ? sanitizeKey(user.email) : null;
-        const isOnline = emailKey && statuses[emailKey] && statuses[emailKey].online;
-        const lastSeen = emailKey && statuses[emailKey] ? new Date(statuses[emailKey].lastSeen).toLocaleTimeString() : "Unknown";
-        const card = document.createElement("div");
-        card.className = "admin-user-card";
-        card.innerHTML = `
-          <img src="${user.photo || 'images/icon.png'}" alt="User photo">
-          <div class="admin-user-info">
-            <strong>${user.name || "Unnamed"}</strong>
-            <span>${user.email || uid}</span>
-            <span style="color:${isOnline ? '#4caf50' : 'var(--text-muted)'}">
-              ${isOnline ? "🟢 Online" : "⚫ Last seen: " + lastSeen}
-            </span>
-          </div>
-          <div class="admin-online-dot ${isOnline ? '' : 'offline'}"></div>
-        `;
-        list.appendChild(card);
+
+  // load blocked list first, then users
+  db.ref("settings/blockedUsers").once("value", blockedSnap => {
+    const blocked = blockedSnap.val() || {};
+    db.ref("users").once("value", snap => {
+      const data = snap.val();
+      if(!data){ list.innerHTML = '<p class="admin-loading">No users found.</p>'; return; }
+      list.innerHTML = "";
+      db.ref("status").once("value", statusSnap => {
+        const statuses = statusSnap.val() || {};
+        Object.entries(data).forEach(([uid, user]) => {
+          const emailKey = user.email ? sanitizeKey(user.email) : null;
+          const isOnline = emailKey && statuses[emailKey] && statuses[emailKey].online;
+          const lastSeen = emailKey && statuses[emailKey]
+            ? new Date(statuses[emailKey].lastSeen).toLocaleTimeString() : "Unknown";
+          const isBlocked = !!blocked[uid];
+          const isAdmin = user.email === ADMIN_EMAIL;
+
+          const card = document.createElement("div");
+          card.className = "admin-user-card";
+          card.id = "usercard-" + uid;
+          card.innerHTML = `
+            <img src="${user.photo || 'images/icon.png'}" alt="User photo">
+            <div class="admin-user-info">
+              <strong>${user.name || "Unnamed"}</strong>
+              <span>${user.email || uid}</span>
+              <span style="color:${isOnline ? '#4caf50' : 'var(--text-muted)'}">
+                ${isOnline ? "🟢 Online" : "⚫ Last seen: " + lastSeen}
+              </span>
+            </div>
+            ${isAdmin
+              ? '<span class="admin-badge">👑 Admin</span>'
+              : `<button class="admin-user-toggle ${isBlocked ? 'unblock' : 'block'}"
+                   onclick="toggleUserChat('${uid}', ${isBlocked})">
+                   ${isBlocked ? '✅ Unblock' : '🚫 Block'}
+                 </button>`
+            }
+          `;
+          list.appendChild(card);
+        });
+      }, err => {
+        list.innerHTML = `<p class="admin-loading">Status error: ${err.message}</p>`;
       });
     }, err => {
-      list.innerHTML = `<p class="admin-loading">Status error: ${err.message}</p>`;
+      list.innerHTML = `<p class="admin-loading" style="color:#ff6b6b;">❌ ${err.message}<br><small>Fix Firebase rules to allow authenticated reads on /users</small></p>`;
     });
-  }, err => {
-    list.innerHTML = `<p class="admin-loading" style="color:#ff6b6b;">❌ ${err.message}<br><small>Fix Firebase rules to allow authenticated reads on /users</small></p>`;
   });
+}
+
+function toggleUserChat(uid, currentlyBlocked){
+  if(!auth.currentUser || auth.currentUser.email !== ADMIN_EMAIL) return;
+  if(currentlyBlocked){
+    db.ref("settings/blockedUsers/"+uid).remove()
+      .then(() => loadAdminUsers());
+  } else {
+    db.ref("settings/blockedUsers/"+uid).set(true)
+      .then(() => loadAdminUsers());
+  }
 }
 
 function loadAdminMsgCount(){

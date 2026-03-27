@@ -281,26 +281,31 @@ const statusRef = db.ref("status");
 // ⚙️ SETTINGS LISTENERS (must be after db is defined)
 // =============================
 function applySettingChange(key, val){
+  const isAdmin = auth.currentUser && auth.currentUser.email === ADMIN_EMAIL;
   if(key === "heartsEnabled"){
     heartsEnabled = val;
     const cb = document.getElementById("toggleHearts");
     if(cb) cb.checked = val;
   }
   if(key === "memoriesEnabled"){
+    // admin always has access
     const lock = document.getElementById("memoriesLock");
-    if(lock) lock.style.display = val ? "none" : "flex";
+    if(lock) lock.style.display = (val || isAdmin) ? "none" : "flex";
     const cb = document.getElementById("toggleMemories");
     if(cb) cb.checked = val;
   }
   if(key === "chatEnabled"){
+    // admin always has access
     const lock = document.getElementById("chatLock");
-    if(lock) lock.style.display = val ? "none" : "flex";
+    if(lock) lock.style.display = (val || isAdmin) ? "none" : "flex";
     const cb = document.getElementById("toggleChat");
     if(cb) cb.checked = val;
-    const sendBtn = document.querySelector(".chat-input button");
-    const inp = document.getElementById("chatInput");
-    if(sendBtn) sendBtn.disabled = !val;
-    if(inp) inp.disabled = !val;
+    if(!isAdmin){
+      const sendBtn = document.querySelector(".chat-input button");
+      const inp = document.getElementById("chatInput");
+      if(sendBtn) sendBtn.disabled = !val;
+      if(inp) inp.disabled = !val;
+    }
   }
 }
 
@@ -329,27 +334,34 @@ auth.onAuthStateChanged(user=>{
     } else {
       db.ref("users/"+user.uid).update({ email: user.email });
     }
-    setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); checkAdminAccess(user); },300);
+    setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); checkAdminAccess(user);
+      // re-apply all settings now that we know who the user is
+      ["heartsEnabled","memoriesEnabled","chatEnabled"].forEach(key => {
+        db.ref("settings/"+key).once("value", snap => applySettingChange(key, snap.val() !== false));
+      });
+    },300);
 
-    // listen for this user's block status in real time
-    db.ref("settings/blockedUsers/"+user.uid).on("value", snap => {
-      const isBlocked = snap.val() === true;
-      const chatInput = document.getElementById("chatInput");
-      const sendBtn = document.querySelector(".chat-input button");
-      const recordBtn = document.getElementById("recordBtn");
-      const blockedMsg = document.getElementById("chatBlockedMsg");
-      if(isBlocked){
-        if(chatInput) chatInput.disabled = true;
-        if(sendBtn) sendBtn.disabled = true;
-        if(recordBtn) recordBtn.disabled = true;
-        if(blockedMsg) blockedMsg.style.display = "block";
-      } else {
-        if(chatInput) chatInput.disabled = false;
-        if(sendBtn) sendBtn.disabled = false;
-        if(recordBtn) recordBtn.disabled = false;
-        if(blockedMsg) blockedMsg.style.display = "none";
-      }
-    });
+    // listen for this user's block status in real time (skip for admin)
+    if(user.email !== ADMIN_EMAIL){
+      db.ref("settings/blockedUsers/"+user.uid).on("value", snap => {
+        const isBlocked = snap.val() === true;
+        const chatInput = document.getElementById("chatInput");
+        const sendBtn = document.querySelector(".chat-input button");
+        const recordBtn = document.getElementById("recordBtn");
+        const blockedMsg = document.getElementById("chatBlockedMsg");
+        if(isBlocked){
+          if(chatInput) chatInput.disabled = true;
+          if(sendBtn) sendBtn.disabled = true;
+          if(recordBtn) recordBtn.disabled = true;
+          if(blockedMsg) blockedMsg.style.display = "block";
+        } else {
+          if(chatInput) chatInput.disabled = false;
+          if(sendBtn) sendBtn.disabled = false;
+          if(recordBtn) recordBtn.disabled = false;
+          if(blockedMsg) blockedMsg.style.display = "none";
+        }
+      });
+    }
   } else {
     if(loginBox) loginBox.style.display="block";
     if(chat) chat.style.display="none";
@@ -582,6 +594,13 @@ function checkAdminAccess(user){
   if(!btn) return;
   const isAdmin = user && user.email === ADMIN_EMAIL;
   btn.style.setProperty("display", isAdmin ? "flex" : "none", "important");
+  // also re-apply settings without locks for admin
+  if(isAdmin){
+    const chatLock = document.getElementById("chatLock");
+    const memoriesLock = document.getElementById("memoriesLock");
+    if(chatLock) chatLock.style.display = "none";
+    if(memoriesLock) memoriesLock.style.display = "none";
+  }
 }
 
 // =============================

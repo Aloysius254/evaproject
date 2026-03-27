@@ -940,3 +940,228 @@ button:not(#musicBtn):not(#recordBtn):not(.chat-input button):not(.controls butt
   transition: opacity 0.2s;
 }
 .eye-btn:hover { opacity: 1; }
+
+/* =============================================
+   ADMIN PANEL
+   ============================================= */
+#adminPanel {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.admin-panel-inner {
+  background: linear-gradient(160deg, #0d0d1a, #1a0533);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s cubic-bezier(0.34,1.2,0.64,1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.admin-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 0;
+  position: sticky;
+  top: 0;
+  background: linear-gradient(160deg, #0d0d1a, #1a0533);
+  z-index: 1;
+}
+
+.admin-panel-header h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  background: none;
+  -webkit-text-fill-color: #fff;
+}
+
+.admin-close-btn {
+  background: var(--glass) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 50% !important;
+  width: 34px !important; height: 34px !important;
+  padding: 0 !important;
+  font-size: 14px !important;
+  color: #fff !important;
+  cursor: pointer;
+  box-shadow: none !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 16px 20px 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.admin-tab {
+  padding: 8px 16px !important;
+  border-radius: 50px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  background: transparent !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--text-muted) !important;
+  cursor: pointer;
+  box-shadow: none !important;
+  margin: 0 0 -1px !important;
+  transition: all 0.2s !important;
+}
+
+.admin-tab.active {
+  background: linear-gradient(135deg, var(--pink), var(--purple)) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
+.admin-tab-content { padding: 20px; }
+
+.admin-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+/* User list */
+.admin-user-list { display: flex; flex-direction: column; gap: 10px; }
+
+.admin-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.admin-user-card img {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.admin-user-info { flex: 1; min-width: 0; }
+.admin-user-info strong { display: block; font-size: 14px; color: #fff; }
+.admin-user-info span  { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+
+.admin-online-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #4caf50;
+  box-shadow: 0 0 6px #4caf50;
+  flex-shrink: 0;
+}
+.admin-online-dot.offline { background: #666; box-shadow: none; }
+
+/* Chats tab */
+.admin-stat {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.admin-action-btn {
+  width: 100%;
+  margin: 8px 0 !important;
+  padding: 13px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+}
+
+/* Settings tab */
+.admin-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.85);
+}
+
+.admin-email-badge {
+  font-size: 11px;
+  color: var(--pink-light);
+  background: rgba(233,30,140,0.15);
+  border: 1px solid rgba(233,30,140,0.3);
+  border-radius: 50px;
+  padding: 3px 10px;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Toggle switch */
+.toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 3px; top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--pink); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+/* Admin gear button in chat header */
+#adminPanelBtn {
+  background: rgba(255,255,255,0.15) !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 34px !important; height: 34px !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+  cursor: pointer;
+  box-shadow: none !important;
+  margin: 0 !important;
+  flex-shrink: 0;
+  transition: background 0.2s !important;
+}
+#adminPanelBtn:hover { background: rgba(233,30,140,0.4) !important; }
+
+.admin-loading { color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0; }

@@ -281,7 +281,10 @@ auth.onAuthStateChanged(user=>{
     if(!username){
       username=prompt("Enter your display name ❤️")||"Anonymous";
       localStorage.setItem("username",username);
-      db.ref("users/"+user.uid).set({ name: username });
+      db.ref("users/"+user.uid).set({ name: username, email: user.email });
+    } else {
+      // always keep email up to date
+      db.ref("users/"+user.uid).update({ email: user.email });
     }
     setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); checkAdminAccess(user); },300);
   } else {
@@ -509,9 +512,89 @@ document.addEventListener("click", e => {
 const ADMIN_EMAIL = "aloysiusmworia@gmail.com";
 
 function checkAdminAccess(user){
-  const btn = document.getElementById("adminDeleteBtn");
+  const btn = document.getElementById("adminPanelBtn");
   if(!btn) return;
-  btn.style.display = (user && user.email === ADMIN_EMAIL) ? "inline-block" : "none";
+  btn.style.display = (user && user.email === ADMIN_EMAIL) ? "flex" : "none";
+}
+
+// =============================
+// ⚙️ ADMIN PANEL
+// =============================
+function openAdminPanel(){
+  if(!auth.currentUser || auth.currentUser.email !== ADMIN_EMAIL){ return; }
+  const panel = document.getElementById("adminPanel");
+  if(!panel) return;
+  panel.style.display = "flex";
+  // set email badge
+  const badge = document.getElementById("adminEmail");
+  if(badge) badge.textContent = auth.currentUser.email;
+  // load users and message count
+  loadAdminUsers();
+  loadAdminMsgCount();
+}
+
+function closeAdminPanel(){
+  const panel = document.getElementById("adminPanel");
+  if(panel) panel.style.display = "none";
+}
+
+// close on backdrop click
+document.addEventListener("click", e => {
+  const panel = document.getElementById("adminPanel");
+  if(panel && e.target === panel) closeAdminPanel();
+});
+
+function switchAdminTab(tab, btn){
+  // hide all tab contents
+  document.querySelectorAll(".admin-tab-content").forEach(t => t.style.display = "none");
+  document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
+  document.getElementById("adminTab-"+tab).style.display = "block";
+  btn.classList.add("active");
+  if(tab === "users") loadAdminUsers();
+  if(tab === "chats") loadAdminMsgCount();
+}
+
+function loadAdminUsers(){
+  const list = document.getElementById("adminUserList");
+  if(!list) return;
+  list.innerHTML = '<p class="admin-loading">Loading...</p>';
+  db.ref("users").once("value", snap => {
+    const data = snap.val();
+    if(!data){ list.innerHTML = '<p class="admin-loading">No users found.</p>'; return; }
+    list.innerHTML = "";
+    db.ref("status").once("value", statusSnap => {
+      const statuses = statusSnap.val() || {};
+      Object.entries(data).forEach(([uid, user]) => {
+        const emailKey = user.email ? sanitizeKey(user.email) : null;
+        const isOnline = emailKey && statuses[emailKey] && statuses[emailKey].online;
+        const lastSeen = emailKey && statuses[emailKey] ? new Date(statuses[emailKey].lastSeen).toLocaleTimeString() : "Unknown";
+        const card = document.createElement("div");
+        card.className = "admin-user-card";
+        card.innerHTML = `
+          <img src="${user.photo || 'images/icon.png'}" alt="User photo">
+          <div class="admin-user-info">
+            <strong>${user.name || "Unnamed"}</strong>
+            <span>${user.email || uid}</span>
+            <span style="color:${isOnline ? '#4caf50' : 'var(--text-muted)'}">
+              ${isOnline ? "🟢 Online" : "⚫ Last seen: " + lastSeen}
+            </span>
+          </div>
+          <div class="admin-online-dot ${isOnline ? '' : 'offline'}"></div>
+        `;
+        list.appendChild(card);
+      });
+    });
+  });
+}
+
+function loadAdminMsgCount(){
+  const stat = document.getElementById("adminMsgCount");
+  if(!stat) return;
+  stat.textContent = "Counting...";
+  db.ref("messages").once("value", snap => {
+    const count = snap.numChildren();
+    stat.textContent = `📨 Total messages: ${count}`;
+  });
 }
 
 function adminDeleteChats(){
@@ -520,9 +603,19 @@ function adminDeleteChats(){
   }
   if(!confirm("Delete ALL chat messages? This cannot be undone.")) return;
   db.ref("messages").remove()
-    .then(()=> alert("All chats cleared ✔"))
+    .then(()=>{ alert("All chats cleared ✔"); loadAdminMsgCount(); })
     .catch(err => alert("Error: " + err.message));
 }
+
+let heartsEnabled = true;
+function toggleHeartsEffect(enabled){
+  heartsEnabled = enabled;
+}
+// patch createHeart to respect toggle
+const _origCreateHeart = createHeart;
+window.createHeart = function(){
+  if(heartsEnabled) _origCreateHeart();
+};
 
 // =============================
 // 🚪 LOGOUT

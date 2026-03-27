@@ -246,6 +246,7 @@
         <span id="displayName">Eva ❤️</span>
         <div id="userStatus"></div>
       </div>
+      <button id="adminPanelBtn" onclick="event.stopPropagation(); openAdminPanel()" style="display:none;" title="Admin Panel">⚙️</button>
     </div>
 
     <div id="chatBox"></div>
@@ -261,7 +262,6 @@
       <button onclick="changeUsername()">✏️ Name</button>
       <button onclick="changePhoto()">📷 Photo</button>
       <button onclick="logout()" class="btn-danger">🚪 Logout</button>
-      <button id="adminDeleteBtn" onclick="adminDeleteChats()" class="btn-danger" style="display:none;">�️ Clear Chats</button>
       <span id="recordStatus"></span>
       <input type="file" id="photoInput" accept="image/*" style="display:none">
     </div>
@@ -277,6 +277,55 @@
     <img id="profileModalPhoto" src="images/icon.png" alt="Profile photo">
     <p id="profileModalName"></p>
     <button onclick="changePhoto()">📷 Change Photo</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel" style="display:none;" role="dialog" aria-modal="true">
+  <div class="admin-panel-inner">
+    <div class="admin-panel-header">
+      <h2>⚙️ Admin Panel</h2>
+      <button class="admin-close-btn" onclick="closeAdminPanel()">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchAdminTab('users', this)">👥 Users</button>
+      <button class="admin-tab" onclick="switchAdminTab('chats', this)">💬 Chats</button>
+      <button class="admin-tab" onclick="switchAdminTab('settings', this)">🔧 Settings</button>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="adminTab-users" class="admin-tab-content">
+      <p class="admin-section-label">Registered Users</p>
+      <div id="adminUserList" class="admin-user-list">
+        <p class="admin-loading">Loading users...</p>
+      </div>
+    </div>
+
+    <!-- Chats Tab -->
+    <div id="adminTab-chats" class="admin-tab-content" style="display:none;">
+      <p class="admin-section-label">Message Management</p>
+      <div class="admin-stat" id="adminMsgCount">Counting messages...</div>
+      <button class="btn-danger admin-action-btn" onclick="adminDeleteChats()">🗑️ Delete All Messages</button>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="adminTab-settings" class="admin-tab-content" style="display:none;">
+      <p class="admin-section-label">Site Settings</p>
+      <div class="admin-setting-row">
+        <span>Floating Hearts</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleHearts" checked onchange="toggleHeartsEffect(this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="admin-setting-row">
+        <span>Logged in as</span>
+        <span id="adminEmail" class="admin-email-badge"></span>
+      </div>
+      <button class="btn-danger admin-action-btn" onclick="logout(); closeAdminPanel()">🚪 Logout</button>
+    </div>
   </div>
 </div>
 

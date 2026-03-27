@@ -381,6 +381,24 @@ cursor:pointer;
   background: #075e54;
   color: white;
   padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-header #displayName {
+  font-weight: bold;
+  font-size: 16px;
+  flex: 1;
+}
+
+#profilePhoto {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  cursor: pointer;
 }
 
 #chatBox {

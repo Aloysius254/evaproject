@@ -262,12 +262,33 @@ auth.onAuthStateChanged(user=>{
       localStorage.setItem("username",username);
       db.ref("users/"+user.uid).set({ name: username });
     }
-    setTimeout(()=>{ loadMessages(); setOnline(); },300);
+    setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); },300);
   } else {
     if(loginBox) loginBox.style.display="block";
     if(chat) chat.style.display="none";
   }
 });
+
+// =============================
+// 👤 LOAD PROFILE
+// =============================
+function loadProfile(){
+  if(!auth.currentUser) return;
+  db.ref("users/"+auth.currentUser.uid).once("value", snap=>{
+    const data=snap.val();
+    if(!data) return;
+    if(data.name){
+      localStorage.setItem("username", data.name);
+      const nameEl=document.getElementById("displayName");
+      if(nameEl) nameEl.textContent=data.name;
+    }
+    if(data.photo){
+      localStorage.setItem("photoURL", data.photo);
+      const img=document.getElementById("profilePhoto");
+      if(img) img.src=data.photo;
+    }
+  });
+}
 
 // =============================
 // 💬 LOAD MESSAGES
@@ -385,23 +406,32 @@ typingRef.on("value", snapshot=>{
 // =============================
 let mediaRecorder, audioChunks=[];
 const recordBtn=document.getElementById("recordBtn");
+const recordStatus=document.getElementById("recordStatus");
+
 recordBtn.addEventListener("mousedown", startRecording);
 recordBtn.addEventListener("mouseup", stopRecording);
-recordBtn.addEventListener("touchstart", startRecording);
-recordBtn.addEventListener("touchend", stopRecording);
+recordBtn.addEventListener("touchstart", e=>{ e.preventDefault(); startRecording(); });
+recordBtn.addEventListener("touchend", e=>{ e.preventDefault(); stopRecording(); });
 
 function startRecording(){
+  if(!auth.currentUser){ alert("Login first 🔒"); return; }
   navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
     mediaRecorder=new MediaRecorder(stream);
     mediaRecorder.start();
     audioChunks=[];
     mediaRecorder.ondataavailable=e=>{ audioChunks.push(e.data); };
-  });
+    recordBtn.style.background="#e53935";
+    recordBtn.textContent="🔴 Recording...";
+    if(recordStatus) recordStatus.textContent="Release to send";
+  }).catch(()=>alert("Microphone access denied ❌"));
 }
 
 function stopRecording(){
-  if(!mediaRecorder) return console.log("Recorder not started ❌");
+  if(!mediaRecorder || mediaRecorder.state==="inactive") return;
   mediaRecorder.stop();
+  recordBtn.style.background="";
+  recordBtn.textContent="🎤 Hold to Record";
+  if(recordStatus) recordStatus.textContent="Uploading...";
   mediaRecorder.onstop=async()=>{
     const blob=new Blob(audioChunks,{type:"audio/webm"});
     try{
@@ -409,7 +439,59 @@ function stopRecording(){
       await storageRef.put(blob);
       const url=await storageRef.getDownloadURL();
       db.ref("messages").push({ voice:url, user:localStorage.getItem("username")||"me", time:Date.now() });
-    } catch(err){ console.error("Upload failed:", err); }
+      if(recordStatus) recordStatus.textContent="Voice sent ✔";
+      setTimeout(()=>{ if(recordStatus) recordStatus.textContent=""; },2000);
+    } catch(err){
+      console.error("Upload failed:", err);
+      if(recordStatus) recordStatus.textContent="Upload failed ❌";
+    }
+  };
+}
+
+// =============================
+// ✏️ CHANGE USERNAME
+// =============================
+function changeUsername(){
+  if(!auth.currentUser){ alert("Login first 🔒"); return; }
+  const newName=prompt("Enter new display name ❤️");
+  if(!newName || !newName.trim()) return;
+  const trimmed=newName.trim();
+  localStorage.setItem("username", trimmed);
+  db.ref("users/"+auth.currentUser.uid).update({ name: trimmed });
+  const nameEl=document.getElementById("displayName");
+  if(nameEl) nameEl.textContent=trimmed;
+  alert("Name updated to: "+trimmed+" ❤️");
+}
+
+// =============================
+// 📷 CHANGE PROFILE PHOTO
+// =============================
+function changePhoto(){
+  if(!auth.currentUser){ alert("Login first 🔒"); return; }
+  const input=document.getElementById("photoInput");
+  input.click();
+  input.onchange=async()=>{
+    const file=input.files[0];
+    if(!file) return;
+    const photoStatus=document.getElementById("recordStatus");
+    if(photoStatus) photoStatus.textContent="Uploading photo...";
+    try{
+      const storageRef=firebase.storage().ref("photos/"+auth.currentUser.uid+".jpg");
+      await storageRef.put(file);
+      const url=await storageRef.getDownloadURL();
+      // save to Firebase and localStorage
+      localStorage.setItem("photoURL", url);
+      db.ref("users/"+auth.currentUser.uid).update({ photo: url });
+      // update visible profile photo
+      const img=document.getElementById("profilePhoto");
+      if(img) img.src=url;
+      if(photoStatus) photoStatus.textContent="Photo updated ✔";
+      setTimeout(()=>{ if(photoStatus) photoStatus.textContent=""; },2000);
+    } catch(err){
+      console.error("Photo upload failed:", err);
+      if(photoStatus) photoStatus.textContent="Upload failed ❌";
+    }
+    input.value="";
   };
 }
 

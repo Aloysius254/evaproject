@@ -316,9 +316,14 @@ function loadMessages(){
         div.appendChild(audio);
       } else if(msg.text){
         let decrypted;
-        try { decrypted=decrypt(msg.text); } catch(e){ decrypted=msg.text; console.warn("Failed to decrypt:", e);}
-        const text=document.createElement("span");
-        text.innerText=decrypted;
+        try {
+          const bytes = CryptoJS.AES.decrypt(msg.text, SECRET_KEY);
+          const result = bytes.toString(CryptoJS.enc.Utf8);
+          // if result is empty string, decryption failed (old unencrypted message)
+          decrypted = result || msg.text;
+        } catch(e){ decrypted = msg.text; }
+        const text = document.createElement("span");
+        text.innerText = decrypted;
         div.appendChild(text);
       }
 

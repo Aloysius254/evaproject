@@ -1,4 +1,4 @@
-const CACHE = "aloeva-v3";
+const CACHE = "aloeva-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,8 +7,8 @@ const ASSETS = [
   "./manifest.json",
   "./favicon.png",
   "./images/love-banner.jpg",
-  "./images/icon.png",
-  "./music/love.mp3"
+  "./images/icon.png"
+  // Note: music/love.mp3 excluded — audio uses range requests (206) which can't be cached
 ];
 
 self.addEventListener("install", e => {
@@ -28,16 +28,35 @@ self.addEventListener("activate", e => {
 });
 
 self.addEventListener("fetch", e => {
-  // network-first for Firebase, cache-first for static assets
-  if(e.request.url.includes("firebaseio.com") || e.request.url.includes("googleapis.com")){
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-    return;
-  }
+  const url = e.request.url;
+
+  // Skip non-GET requests — POST, PUT etc. cannot be cached
+  if(e.request.method !== "GET") return;
+
+  // Skip Firebase, Google APIs, CDN scripts — always network
+  if(
+    url.includes("firebaseio.com") ||
+    url.includes("firebasestorage") ||
+    url.includes("googleapis.com") ||
+    url.includes("gstatic.com") ||
+    url.includes("cdnjs.cloudflare.com") ||
+    url.includes("googletagmanager.com")
+  ) return;
+
+  // Skip audio/video — they use range requests (206) which can't be cached
+  if(url.match(/\.(mp3|mp4|webm|ogg|wav)$/i)) return;
+
+  // Cache-first for everything else (HTML, CSS, JS, images)
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-      const clone = res.clone();
-      caches.open(CACHE).then(cache => cache.put(e.request, clone));
-      return res;
-    }))
+    caches.match(e.request).then(cached => {
+      if(cached) return cached;
+      return fetch(e.request).then(res => {
+        // Only cache valid full responses
+        if(!res || res.status !== 200 || res.type === "opaque") return res;
+        const clone = res.clone();
+        caches.open(CACHE).then(cache => cache.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match("./index.html"));
+    })
   );
 });

@@ -328,7 +328,7 @@ auth.onAuthStateChanged(user=>{
     if(loginBox) loginBox.style.display="none";
     if(chat) chat.style.display="block";
 
-    const isAdmin = user.email === ADMIN_EMAIL;
+    const isAdmin = user.uid === ADMIN_UID;
 
     let username=localStorage.getItem("username");
     if(!username){
@@ -599,11 +599,12 @@ document.addEventListener("click", e => {
 // 🗑️ ADMIN DELETE CHATS
 // =============================
 const ADMIN_EMAIL = "aloysiusmworia@gmail.com";
+const ADMIN_UID   = "kaoSNHGn7vZhhsSpfeUv6w6UkCw1";
 
 function checkAdminAccess(user){
   const btn = document.getElementById("adminPanelBtn");
   if(!btn) return;
-  const isAdmin = user && user.email === ADMIN_EMAIL;
+  const isAdmin = user && user.uid === ADMIN_UID;
   btn.style.setProperty("display", isAdmin ? "flex" : "none", "important");
   // also re-apply settings without locks for admin
   if(isAdmin){
@@ -618,7 +619,7 @@ function checkAdminAccess(user){
 // ⚙️ ADMIN PANEL
 // =============================
 function openAdminPanel(){
-  if(!auth.currentUser || auth.currentUser.email !== ADMIN_EMAIL){ return; }
+  if(!auth.currentUser || auth.currentUser.uid !== ADMIN_UID){ return; }
   const panel = document.getElementById("adminPanel");
   if(!panel) return;
   panel.style.display = "flex";
@@ -671,7 +672,7 @@ function loadAdminUsers(){
           const lastSeen = emailKey && statuses[emailKey]
             ? new Date(statuses[emailKey].lastSeen).toLocaleTimeString() : "Unknown";
           const isBlocked = !!blocked[uid];
-          const isAdmin = user.email === ADMIN_EMAIL;
+          const isAdmin = user.email === ADMIN_EMAIL || uid === ADMIN_UID;
 
           const card = document.createElement("div");
           card.className = "admin-user-card";
@@ -705,7 +706,7 @@ function loadAdminUsers(){
 }
 
 function toggleUserChat(uid, currentlyBlocked){
-  if(!auth.currentUser || auth.currentUser.email !== ADMIN_EMAIL) return;
+  if(!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) return;
   const ref = db.ref("settings/blockedUsers/"+uid);
   if(currentlyBlocked){
     ref.remove()
@@ -729,7 +730,7 @@ function loadAdminMsgCount(){
 }
 
 function adminDeleteChats(){
-  if(!auth.currentUser || auth.currentUser.email !== ADMIN_EMAIL){
+  if(!auth.currentUser || auth.currentUser.uid !== ADMIN_UID){
     alert("Access denied ❌"); return;
   }
   if(!confirm("Delete ALL chat messages? This cannot be undone.")) return;

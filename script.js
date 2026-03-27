@@ -706,12 +706,15 @@ function loadAdminUsers(){
 
 function toggleUserChat(uid, currentlyBlocked){
   if(!auth.currentUser || auth.currentUser.email !== ADMIN_EMAIL) return;
+  const ref = db.ref("settings/blockedUsers/"+uid);
   if(currentlyBlocked){
-    db.ref("settings/blockedUsers/"+uid).remove()
-      .then(() => loadAdminUsers());
+    ref.remove()
+      .then(() => loadAdminUsers())
+      .catch(err => alert("Unblock failed: " + err.message));
   } else {
-    db.ref("settings/blockedUsers/"+uid).set(true)
-      .then(() => loadAdminUsers());
+    ref.set(true)
+      .then(() => loadAdminUsers())
+      .catch(err => alert("Block failed: " + err.message));
   }
 }
 

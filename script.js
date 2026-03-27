@@ -516,7 +516,8 @@ const ADMIN_EMAIL = "aloysiusmworia@gmail.com";
 function checkAdminAccess(user){
   const btn = document.getElementById("adminPanelBtn");
   if(!btn) return;
-  btn.style.display = (user && user.email === ADMIN_EMAIL) ? "flex" : "none";
+  const isAdmin = user && user.email === ADMIN_EMAIL;
+  btn.style.setProperty("display", isAdmin ? "flex" : "none", "important");
 }
 
 // =============================

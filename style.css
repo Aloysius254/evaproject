@@ -1150,6 +1150,7 @@ button:not(#musicBtn):not(#recordBtn):not(.chat-input button):not(.controls butt
 
 /* Admin gear button in chat header */
 #adminPanelBtn {
+  display: none; /* shown only for admin via JS */
   background: rgba(255,255,255,0.15) !important;
   border: none !important;
   border-radius: 50% !important;

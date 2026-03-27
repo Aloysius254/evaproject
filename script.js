@@ -278,24 +278,21 @@ const auth = firebase.auth();
 const statusRef = db.ref("status");
 
 // =============================
-// ⚙️ SETTINGS LISTENERS (must be after db is defined)
+// ⚙️ SETTINGS — applied per user after auth resolves
 // =============================
-function applySettingChange(key, val){
-  const isAdmin = auth.currentUser && auth.currentUser.email === ADMIN_EMAIL;
+function applySettingChange(key, val, isAdmin){
   if(key === "heartsEnabled"){
     heartsEnabled = val;
     const cb = document.getElementById("toggleHearts");
     if(cb) cb.checked = val;
   }
   if(key === "memoriesEnabled"){
-    // admin always has access
     const lock = document.getElementById("memoriesLock");
     if(lock) lock.style.display = (val || isAdmin) ? "none" : "flex";
     const cb = document.getElementById("toggleMemories");
     if(cb) cb.checked = val;
   }
   if(key === "chatEnabled"){
-    // admin always has access
     const lock = document.getElementById("chatLock");
     if(lock) lock.style.display = (val || isAdmin) ? "none" : "flex";
     const cb = document.getElementById("toggleChat");
@@ -309,22 +306,29 @@ function applySettingChange(key, val){
   }
 }
 
-["heartsEnabled","memoriesEnabled","chatEnabled"].forEach(key => {
-  db.ref("settings/"+key).on("value", snap => {
-    applySettingChange(key, snap.val() !== false);
+// Start listening to settings for a specific user role
+// Called once after auth state is known
+function initSettingsListeners(isAdmin){
+  ["heartsEnabled","memoriesEnabled","chatEnabled"].forEach(key => {
+    db.ref("settings/"+key).on("value", snap => {
+      applySettingChange(key, snap.val() !== false, isAdmin);
+    });
   });
-});
+}
 
 // sanitize Firebase key
 function sanitizeKey(key){ return key.replace(/[.#$[\]]/g,"-"); }
 
 // 🔄 CHECK LOGIN STATE
+let settingsListenersStarted = false;
 auth.onAuthStateChanged(user=>{
   const loginBox=document.getElementById("loginBox");
   const chat=document.getElementById("chat");
   if(user){
     if(loginBox) loginBox.style.display="none";
     if(chat) chat.style.display="block";
+
+    const isAdmin = user.email === ADMIN_EMAIL;
 
     let username=localStorage.getItem("username");
     if(!username){
@@ -334,15 +338,17 @@ auth.onAuthStateChanged(user=>{
     } else {
       db.ref("users/"+user.uid).update({ email: user.email });
     }
-    setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); checkAdminAccess(user);
-      // re-apply all settings now that we know who the user is
-      ["heartsEnabled","memoriesEnabled","chatEnabled"].forEach(key => {
-        db.ref("settings/"+key).once("value", snap => applySettingChange(key, snap.val() !== false));
-      });
-    },300);
 
-    // listen for this user's block status in real time (skip for admin)
-    if(user.email !== ADMIN_EMAIL){
+    // start settings listeners once, with correct role
+    if(!settingsListenersStarted){
+      settingsListenersStarted = true;
+      initSettingsListeners(isAdmin);
+    }
+
+    setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); checkAdminAccess(user); },300);
+
+    // per-user block listener (skip admin)
+    if(!isAdmin){
       db.ref("settings/blockedUsers/"+user.uid).on("value", snap => {
         const isBlocked = snap.val() === true;
         const chatInput = document.getElementById("chatInput");
@@ -365,6 +371,11 @@ auth.onAuthStateChanged(user=>{
   } else {
     if(loginBox) loginBox.style.display="block";
     if(chat) chat.style.display="none";
+    // logged out — apply settings as non-admin visitor
+    if(!settingsListenersStarted){
+      settingsListenersStarted = true;
+      initSettingsListeners(false);
+    }
   }
 });
 

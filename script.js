@@ -449,6 +449,16 @@ function stopRecording(){
 }
 
 // =============================
+// 🚪 LOGOUT
+// =============================
+function logout(){
+  auth.signOut().then(()=>{
+    localStorage.removeItem("username");
+    localStorage.removeItem("photoURL");
+  });
+}
+
+// =============================
 // ✏️ CHANGE USERNAME
 // =============================
 function changeUsername(){

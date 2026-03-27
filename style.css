@@ -1198,3 +1198,37 @@ button:not(#musicBtn):not(#recordBtn):not(.chat-input button):not(.controls butt
   opacity: 0.75 !important;
   transform: none !important;
 }
+
+/* =============================================
+   SECTION LOCK OVERLAY
+   ============================================= */
+.section-lock {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: rgba(10,0,20,0.92);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+}
+
+.section-lock-inner {
+  text-align: center;
+  color: rgba(255,255,255,0.7);
+}
+
+.section-lock-inner p:first-child {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+.section-lock-inner p:last-child {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+/* make memories and chat-container position relative so lock overlay works */
+#memories { position: relative; }
+.chat-container { position: relative; }

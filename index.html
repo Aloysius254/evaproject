@@ -132,6 +132,12 @@
      MEMORIES
 ════════════════════════════════════════ -->
 <section id="memories" style="display:none;">
+  <div id="memoriesLock" class="section-lock" style="display:none;">
+    <div class="section-lock-inner">
+      <p>🔒</p>
+      <p>Memories are currently locked by admin</p>
+    </div>
+  </div>
   <h2>Our Memories 📸</h2>
   <p class="memories-subtitle">Each photo tells the story of our love, laughter, and unforgettable moments 💕</p>
 
@@ -213,6 +219,12 @@
 
   <!-- CHAT -->
   <div class="chat-container">
+    <div id="chatLock" class="section-lock" style="display:none;">
+      <div class="section-lock-inner">
+        <p>🔒</p>
+        <p>Chat is currently locked by admin</p>
+      </div>
+    </div>
 
     <!-- Contact links -->
     <div class="contact-links">
@@ -317,7 +329,21 @@
       <div class="admin-setting-row">
         <span>Floating Hearts</span>
         <label class="toggle-switch">
-          <input type="checkbox" id="toggleHearts" checked onchange="toggleHeartsEffect(this.checked)">
+          <input type="checkbox" id="toggleHearts" checked onchange="toggleSetting('heartsEnabled', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="admin-setting-row">
+        <span>Memories Page</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleMemories" checked onchange="toggleSetting('memoriesEnabled', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="admin-setting-row">
+        <span>Private Chat</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleChat" checked onchange="toggleSetting('chatEnabled', this.checked)">
           <span class="toggle-slider"></span>
         </label>
       </div>

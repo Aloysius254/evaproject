@@ -211,13 +211,34 @@ function initComments(){
 // =============================
 let heartsEnabled = true;
 
-// Listen to Firebase for hearts setting — affects ALL users in real time
-db.ref("settings/heartsEnabled").on("value", snap => {
-  // if value is null (never set), default to true
-  heartsEnabled = snap.val() !== false;
-  // sync the toggle checkbox if admin panel is open
-  const checkbox = document.getElementById("toggleHearts");
-  if(checkbox) checkbox.checked = heartsEnabled;
+// Listen to ALL settings from Firebase in real time
+const SETTINGS = ["heartsEnabled", "memoriesEnabled", "chatEnabled"];
+SETTINGS.forEach(key => {
+  db.ref("settings/"+key).on("value", snap => {
+    const val = snap.val() !== false; // default true if never set
+    if(key === "heartsEnabled"){
+      heartsEnabled = val;
+      const cb = document.getElementById("toggleHearts");
+      if(cb) cb.checked = val;
+    }
+    if(key === "memoriesEnabled"){
+      const lock = document.getElementById("memoriesLock");
+      if(lock) lock.style.display = val ? "none" : "flex";
+      const cb = document.getElementById("toggleMemories");
+      if(cb) cb.checked = val;
+    }
+    if(key === "chatEnabled"){
+      const lock = document.getElementById("chatLock");
+      if(lock) lock.style.display = val ? "none" : "flex";
+      const cb = document.getElementById("toggleChat");
+      if(cb) cb.checked = val;
+      // also block sending if chat is locked
+      const sendBtn = document.querySelector(".chat-input button");
+      const chatInput = document.getElementById("chatInput");
+      if(sendBtn) sendBtn.disabled = !val;
+      if(chatInput) chatInput.disabled = !val;
+    }
+  });
 });
 
 function createHeart(){
@@ -422,6 +443,8 @@ function decrypt(cipher){ return CryptoJS.AES.decrypt(cipher,SECRET_KEY).toStrin
 // =============================
 function sendMessage(){
   if(!auth.currentUser){ alert("Login first 🔒"); return; }
+  const chatLock = document.getElementById("chatLock");
+  if(chatLock && chatLock.style.display !== "none"){ alert("Chat is locked by admin 🔒"); return; }
   const input=document.getElementById("chatInput");
   const text=input.value.trim();
   if(!text) return;
@@ -632,9 +655,8 @@ function adminDeleteChats(){
     .catch(err => alert("Error: " + err.message));
 }
 
-function toggleHeartsEffect(enabled){
-  // write to Firebase so ALL users are affected instantly
-  db.ref("settings/heartsEnabled").set(enabled);
+function toggleSetting(key, enabled){
+  db.ref("settings/"+key).set(enabled);
 }
 
 // =============================

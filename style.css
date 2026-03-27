@@ -472,6 +472,12 @@ transform:scale(1.1);
 background:#ff758c;
 }
 
+.box.matched{
+  background:#4caf50;
+  cursor:default;
+  transform:scale(1.05);
+}
+
 .voice-box{
   margin-top:20px;
 }

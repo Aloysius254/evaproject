@@ -142,9 +142,13 @@ function updateCounter(){
   const el = document.getElementById("counter");
   if(!el) return;
 
-  let now = new Date();
-  let days = Math.floor((now - startDate)/(1000*60*60*24));
-  el.innerHTML = `We have loved each other for ${days} days ❤️`;
+  const now = new Date();
+  const diff = now - startDate;
+  const days = Math.floor(diff / (1000*60*60*24));
+  const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+  const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
+  const secs = Math.floor((diff % (1000*60)) / 1000);
+  el.innerHTML = `We have loved each other for ${days} days, ${hours}h ${mins}m ${secs}s ❤️`;
 }
 setInterval(updateCounter,1000);
 
@@ -424,26 +428,63 @@ function checkHeart(el){
   } else el.innerHTML="💔";
 }
 
+// quiz answer stored as base64 to avoid plain text in source
+const QUIZ_ANSWER = btoa("school"); // "c2Nob29s"
 function startQuiz(){
   const q=prompt("Where did we first meet?");
-  if(q && q.toLowerCase()==="school"){
+  if(q && btoa(q.toLowerCase().trim()) === QUIZ_ANSWER){
     alert("Correct ❤️");
     document.getElementById("level2").style.display="none";
     document.getElementById("level3").style.display="block";
+    buildMemoryGame();
   } else alert("Try again 💕");
 }
 
-let firstCard=null;
+// =============================
+// 🎮 MEMORY MATCH GAME (Level 3)
+// =============================
+const CARD_PAIRS = ["🌹","🌹","💋","💋","🎁","🎁","💍","💍"];
+let flipped=[], matched=0, lockBoard=false;
+
+function buildMemoryGame(){
+  const grid=document.querySelector("#level3 .game-grid");
+  if(!grid) return;
+  const shuffled=[...CARD_PAIRS].sort(()=>Math.random()-0.5);
+  grid.innerHTML="";
+  matched=0; flipped=[];
+  shuffled.forEach(emoji=>{
+    const box=document.createElement("div");
+    box.className="box";
+    box.dataset.value=emoji;
+    box.textContent="💌";
+    box.onclick=()=>flipCard(box);
+    grid.appendChild(box);
+  });
+}
+
 function flipCard(el){
-  el.innerHTML="❤️";
-  if(!firstCard) firstCard=el;
-  else setTimeout(()=>{
-    firstCard.innerHTML="💌";
-    el.innerHTML="💌";
-    firstCard=null;
-    document.getElementById("level3").style.display="none";
-    document.getElementById("final").style.display="block";
-  },1000);
+  if(lockBoard || el.classList.contains("matched") || flipped.includes(el)) return;
+  el.textContent=el.dataset.value;
+  flipped.push(el);
+  if(flipped.length===2){
+    lockBoard=true;
+    if(flipped[0].dataset.value===flipped[1].dataset.value){
+      flipped.forEach(c=>c.classList.add("matched"));
+      matched++;
+      flipped=[]; lockBoard=false;
+      if(matched===CARD_PAIRS.length/2){
+        setTimeout(()=>{
+          document.getElementById("level3").style.display="none";
+          document.getElementById("final").style.display="block";
+        },600);
+      }
+    } else {
+      setTimeout(()=>{
+        flipped.forEach(c=>c.textContent="💌");
+        flipped=[]; lockBoard=false;
+      },900);
+    }
+  }
 }
 
 // =============================

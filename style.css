@@ -914,3 +914,29 @@ button:not(#musicBtn):not(#recordBtn):not(.chat-input button):not(.controls butt
   background: rgba(220,50,50,0.45) !important;
   transform: none !important;
 }
+
+/* =============================================
+   PASSWORD SHOW/HIDE
+   ============================================= */
+.password-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrap input {
+  width: 100%;
+  padding-right: 44px !important;
+}
+
+.eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  user-select: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.eye-btn:hover { opacity: 1; }

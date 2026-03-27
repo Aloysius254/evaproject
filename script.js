@@ -1,7 +1,6 @@
 function register(){
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-
   auth.createUserWithEmailAndPassword(email, password)
     .then(()=> alert("Account created ❤️"))
     .catch(err => alert(err.message));
@@ -10,14 +9,36 @@ function register(){
 function login(){
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
-
   auth.signInWithEmailAndPassword(email, password)
     .then(()=>{})
     .catch((error)=> {
-      console.log(error); // 👈 shows real error in console
-      alert(error.message); // 👈 shows exact reason
+      console.log(error);
+      alert(error.message);
     });
 }
+
+function togglePassword(){
+  const input = document.getElementById("password");
+  const btn = document.getElementById("eyeBtn");
+  if(!input) return;
+  if(input.type === "password"){
+    input.type = "text";
+    btn.textContent = "🙈";
+  } else {
+    input.type = "password";
+    btn.textContent = "👁️";
+  }
+}
+
+// Enter key on email/password → login
+document.addEventListener("DOMContentLoaded", ()=>{
+  ["email","password"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener("keydown", e=>{
+      if(e.key === "Enter"){ e.preventDefault(); login(); }
+    });
+  });
+});
 
 // Prompt for username once
 if(!localStorage.getItem("user")){

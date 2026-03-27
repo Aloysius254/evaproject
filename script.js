@@ -57,18 +57,18 @@ function handleRatingVisibility(section){
 
 window.showSection = function(id){
   const sections = document.querySelectorAll("section");
-
   sections.forEach(sec=>{
-    if(sec.id !== "site-rating"){
-      sec.style.display = "none";
-    }
+    if(sec.id !== "site-rating") sec.style.display = "none";
   });
-
   const target = document.getElementById(id);
   if(target) target.style.display = "block";
 
-  handleRatingVisibility(id);
+  // update active nav link
+  document.querySelectorAll("nav a").forEach(a => a.classList.remove("active"));
+  const activeLink = document.getElementById("nav-"+id);
+  if(activeLink) activeLink.classList.add("active");
 
+  handleRatingVisibility(id);
   localStorage.setItem("currentPage", id);
 }
 
@@ -155,8 +155,8 @@ setInterval(updateCounter,1000);
 // =============================
 // 💌 POPUP
 // =============================
-function showPopup(){ const p=document.getElementById("popup"); if(p)p.style.display="block"; }
-function closePopup(){ const p=document.getElementById("popup"); if(p)p.style.display="none"; }
+function showPopup(){ const p=document.getElementById("popup"); if(p){ p.style.display="flex"; p.classList.add("active"); } }
+function closePopup(){ const p=document.getElementById("popup"); if(p){ p.style.display="none"; p.classList.remove("active"); } }
 
 // =============================
 // 💬 COMMENTS

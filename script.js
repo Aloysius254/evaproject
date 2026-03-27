@@ -210,6 +210,16 @@ function initComments(){
 // ❤️ FLOATING HEARTS
 // =============================
 let heartsEnabled = true;
+
+// Listen to Firebase for hearts setting — affects ALL users in real time
+db.ref("settings/heartsEnabled").on("value", snap => {
+  // if value is null (never set), default to true
+  heartsEnabled = snap.val() !== false;
+  // sync the toggle checkbox if admin panel is open
+  const checkbox = document.getElementById("toggleHearts");
+  if(checkbox) checkbox.checked = heartsEnabled;
+});
+
 function createHeart(){
   if(!heartsEnabled) return;
   const heart=document.createElement("div");
@@ -623,7 +633,8 @@ function adminDeleteChats(){
 }
 
 function toggleHeartsEffect(enabled){
-  heartsEnabled = enabled;
+  // write to Firebase so ALL users are affected instantly
+  db.ref("settings/heartsEnabled").set(enabled);
 }
 
 // =============================

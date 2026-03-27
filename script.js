@@ -211,36 +211,6 @@ function initComments(){
 // =============================
 let heartsEnabled = true;
 
-// Listen to ALL settings from Firebase in real time
-const SETTINGS = ["heartsEnabled", "memoriesEnabled", "chatEnabled"];
-SETTINGS.forEach(key => {
-  db.ref("settings/"+key).on("value", snap => {
-    const val = snap.val() !== false; // default true if never set
-    if(key === "heartsEnabled"){
-      heartsEnabled = val;
-      const cb = document.getElementById("toggleHearts");
-      if(cb) cb.checked = val;
-    }
-    if(key === "memoriesEnabled"){
-      const lock = document.getElementById("memoriesLock");
-      if(lock) lock.style.display = val ? "none" : "flex";
-      const cb = document.getElementById("toggleMemories");
-      if(cb) cb.checked = val;
-    }
-    if(key === "chatEnabled"){
-      const lock = document.getElementById("chatLock");
-      if(lock) lock.style.display = val ? "none" : "flex";
-      const cb = document.getElementById("toggleChat");
-      if(cb) cb.checked = val;
-      // also block sending if chat is locked
-      const sendBtn = document.querySelector(".chat-input button");
-      const chatInput = document.getElementById("chatInput");
-      if(sendBtn) sendBtn.disabled = !val;
-      if(chatInput) chatInput.disabled = !val;
-    }
-  });
-});
-
 function createHeart(){
   if(!heartsEnabled) return;
   const heart=document.createElement("div");
@@ -306,6 +276,39 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const auth = firebase.auth();
 const statusRef = db.ref("status");
+
+// =============================
+// ⚙️ SETTINGS LISTENERS (must be after db is defined)
+// =============================
+function applySettingChange(key, val){
+  if(key === "heartsEnabled"){
+    heartsEnabled = val;
+    const cb = document.getElementById("toggleHearts");
+    if(cb) cb.checked = val;
+  }
+  if(key === "memoriesEnabled"){
+    const lock = document.getElementById("memoriesLock");
+    if(lock) lock.style.display = val ? "none" : "flex";
+    const cb = document.getElementById("toggleMemories");
+    if(cb) cb.checked = val;
+  }
+  if(key === "chatEnabled"){
+    const lock = document.getElementById("chatLock");
+    if(lock) lock.style.display = val ? "none" : "flex";
+    const cb = document.getElementById("toggleChat");
+    if(cb) cb.checked = val;
+    const sendBtn = document.querySelector(".chat-input button");
+    const inp = document.getElementById("chatInput");
+    if(sendBtn) sendBtn.disabled = !val;
+    if(inp) inp.disabled = !val;
+  }
+}
+
+["heartsEnabled","memoriesEnabled","chatEnabled"].forEach(key => {
+  db.ref("settings/"+key).on("value", snap => {
+    applySettingChange(key, snap.val() !== false);
+  });
+});
 
 // sanitize Firebase key
 function sanitizeKey(key){ return key.replace(/[.#$[\]]/g,"-"); }

@@ -201,7 +201,9 @@ function initComments(){
 // =============================
 // ❤️ FLOATING HEARTS
 // =============================
+let heartsEnabled = true;
 function createHeart(){
+  if(!heartsEnabled) return;
   const heart=document.createElement("div");
   heart.className="heart";
   heart.innerHTML="❤️";
@@ -607,15 +609,9 @@ function adminDeleteChats(){
     .catch(err => alert("Error: " + err.message));
 }
 
-let heartsEnabled = true;
 function toggleHeartsEffect(enabled){
   heartsEnabled = enabled;
 }
-// patch createHeart to respect toggle
-const _origCreateHeart = createHeart;
-window.createHeart = function(){
-  if(heartsEnabled) _origCreateHeart();
-};
 
 // =============================
 // 🚪 LOGOUT

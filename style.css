@@ -1166,3 +1166,14 @@ button:not(#musicBtn):not(#recordBtn):not(.chat-input button):not(.controls butt
 #adminPanelBtn:hover { background: rgba(233,30,140,0.4) !important; }
 
 .admin-loading { color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0; }
+
+.forgot-link {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--pink-light);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.2s;
+}
+.forgot-link:hover { opacity: 0.75; }

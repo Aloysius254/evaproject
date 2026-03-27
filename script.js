@@ -17,6 +17,14 @@ function login(){
     });
 }
 
+function resetPassword(){
+  const email = document.getElementById("email").value.trim();
+  if(!email){ alert("Enter your email address first 📧"); return; }
+  auth.sendPasswordResetEmail(email)
+    .then(()=> alert("Password reset email sent to " + email + " ❤️\nCheck your inbox."))
+    .catch(err => alert(err.message));
+}
+
 function togglePassword(){
   const input = document.getElementById("password");
   const btn = document.getElementById("eyeBtn");

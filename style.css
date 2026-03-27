@@ -1177,3 +1177,24 @@ button:not(#musicBtn):not(#recordBtn):not(.chat-input button):not(.controls butt
   transition: opacity 0.2s;
 }
 .forgot-link:hover { opacity: 0.75; }
+
+#loginBox .forgot-btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--pink-light) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px !important;
+  cursor: pointer !important;
+  padding: 6px 0 !important;
+  width: auto !important;
+  margin: 4px auto 0 !important;
+  display: block !important;
+  transition: opacity 0.2s !important;
+}
+#loginBox .forgot-btn:hover {
+  opacity: 0.75 !important;
+  transform: none !important;
+}

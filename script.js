@@ -361,24 +361,22 @@ function openProfileModal() {
 }
 
 // ============================================================
-// SECRET ADMIN TRIGGER — triple-tap profile photo
+// ============================================================
+// ADMIN TRIGGER — triple-tap chat header, single tap = profile
 // ============================================================
 let tapCount = 0, tapTimer = null;
 function handleProfileTap() {
   tapCount++;
   clearTimeout(tapTimer);
-  tapTimer = setTimeout(() => { tapCount = 0; }, 600);
-  if (tapCount >= 3) {
+  tapTimer = setTimeout(() => {
+    // timer fired — decide what to do based on final count
+    if (tapCount >= 3 && isAdmin) {
+      openAdminPanel();
+    } else {
+      openProfileModal();
+    }
     tapCount = 0;
-    if (isAdmin) openAdminPanel();
-    else openProfileModal();
-  } else if (tapCount === 1) {
-    // single tap opens profile after short delay (cancelled if more taps come)
-    tapTimer = setTimeout(() => {
-      if (tapCount === 1) openProfileModal();
-      tapCount = 0;
-    }, 600);
-  }
+  }, 400);
 }
 function closeProfileModal() { el("profileModal").style.display = "none"; }
 document.addEventListener("click", e => {

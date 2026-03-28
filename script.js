@@ -37,7 +37,7 @@ let heartsInterval = null;
 // ============================================================
 auth.onAuthStateChanged(user => {
   currentUser = user;
-  isAdmin     = user ? user.uid === ADMIN_UID : false;
+  isAdmin     = user ? user.email === ADMIN_EMAIL : false;
 
   const loginScreen = document.getElementById("loginScreen");
   const app         = document.getElementById("app");
@@ -687,7 +687,7 @@ function loadAdminUsers() {
       const lastSeen = eKey && statuses[eKey] ? new Date(statuses[eKey].lastSeen).toLocaleTimeString() : "Unknown";
       const isBlocked  = !!blocked[uid];
       const isGranted  = !!granted[uid];
-      const isAdminUser = uid === ADMIN_UID;
+      const isAdminUser = user.email === ADMIN_EMAIL;
 
       const card = document.createElement("div");
       card.className = "admin-user-card";

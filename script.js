@@ -96,23 +96,18 @@ function onLogin(user) {
 // ADMIN UI — show/hide gear and unlock everything
 // ============================================================
 function showAdminUI() {
-  // show gear button
-  const btn = document.getElementById("adminPanelBtn");
-  if (btn) btn.style.display = "inline-flex";
-
-  // admin always has full chat access
-  el("chatSection").style.display  = "block";
-  el("chatPending").style.display  = "none";
-  el("chatLock")   && (el("chatLock").style.display    = "none");
-  el("memoriesLock") && (el("memoriesLock").style.display = "none");
-
+  const cs = el("chatSection");
+  const cp = el("chatPending");
+  const cl = el("chatLock");
+  const ml = el("memoriesLock");
+  if (cs) cs.style.display = "block";
+  if (cp) cp.style.display = "none";
+  if (cl) cl.style.display = "none";
+  if (ml) ml.style.display = "none";
   loadMessages();
 }
 
-function hideAdminUI() {
-  const btn = document.getElementById("adminPanelBtn");
-  if (btn) btn.style.display = "none";
-}
+function hideAdminUI() { /* no button to hide */ }
 
 // ============================================================
 // CHAT GRANT — per user
@@ -363,6 +358,27 @@ function openProfileModal() {
   el("profileModalPhoto").src       = el("profilePhoto").src;
   el("profileModalName").textContent = el("displayName").textContent;
   m.style.display = "flex";
+}
+
+// ============================================================
+// SECRET ADMIN TRIGGER — triple-tap profile photo
+// ============================================================
+let tapCount = 0, tapTimer = null;
+function handleProfileTap() {
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => { tapCount = 0; }, 600);
+  if (tapCount >= 3) {
+    tapCount = 0;
+    if (isAdmin) openAdminPanel();
+    else openProfileModal();
+  } else if (tapCount === 1) {
+    // single tap opens profile after short delay (cancelled if more taps come)
+    tapTimer = setTimeout(() => {
+      if (tapCount === 1) openProfileModal();
+      tapCount = 0;
+    }, 600);
+  }
 }
 function closeProfileModal() { el("profileModal").style.display = "none"; }
 document.addEventListener("click", e => {

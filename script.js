@@ -45,7 +45,16 @@ auth.onAuthStateChanged(user => {
   if (user) {
     loginScreen.style.display = "none";
     app.style.display         = "block";
-    onLogin(user);
+
+    // check if email is banned before doing anything
+    db.ref("settings/bannedEmails/" + sanitize(user.email)).once("value", snap => {
+      if (snap.val() === true && user.email !== ADMIN_EMAIL) {
+        auth.signOut();
+        alert("❌ Your account has been banned from this site.");
+        return;
+      }
+      onLogin(user);
+    });
   } else {
     loginScreen.style.display = "flex";
     app.style.display         = "none";
@@ -667,11 +676,13 @@ function loadAdminUsers() {
   Promise.all([
     db.ref("settings/blockedUsers").once("value"),
     db.ref("settings/chatGranted").once("value"),
+    db.ref("settings/bannedEmails").once("value"),
     db.ref("users").once("value"),
     db.ref("status").once("value")
-  ]).then(([blockedSnap, grantedSnap, usersSnap, statusSnap]) => {
+  ]).then(([blockedSnap, grantedSnap, bannedSnap, usersSnap, statusSnap]) => {
     const blocked  = blockedSnap.val()  || {};
     const granted  = grantedSnap.val()  || {};
+    const banned   = bannedSnap.val()   || {};
     const users    = usersSnap.val()    || {};
     const statuses = statusSnap.val()   || {};
 
@@ -682,11 +693,12 @@ function loadAdminUsers() {
 
     list.innerHTML = "";
     Object.entries(users).forEach(([uid, user]) => {
-      const eKey     = user.email ? sanitize(user.email) : null;
-      const online   = eKey && statuses[eKey] && statuses[eKey].online;
-      const lastSeen = eKey && statuses[eKey] ? new Date(statuses[eKey].lastSeen).toLocaleTimeString() : "Unknown";
-      const isBlocked  = !!blocked[uid];
-      const isGranted  = !!granted[uid];
+      const eKey      = user.email ? sanitize(user.email) : null;
+      const online    = eKey && statuses[eKey] && statuses[eKey].online;
+      const lastSeen  = eKey && statuses[eKey] ? new Date(statuses[eKey].lastSeen).toLocaleTimeString() : "Unknown";
+      const isBlocked   = !!blocked[uid];
+      const isGranted   = !!granted[uid];
+      const isBanned    = eKey ? !!banned[eKey] : false;
       const isAdminUser = user.email === ADMIN_EMAIL;
 
       const card = document.createElement("div");
@@ -696,13 +708,13 @@ function loadAdminUsers() {
         <div class="admin-user-info">
           <strong>${user.name || "Unnamed"}</strong>
           <span>${user.email || uid}</span>
-          <span style="color:${online ? '#4caf50' : 'var(--text-muted)'}">
-            ${online ? "🟢 Online" : "⚫ " + lastSeen}
+          <span style="color:${isBanned ? '#ff7070' : online ? '#4caf50' : 'var(--muted)'}">
+            ${isBanned ? "🚫 Banned" : online ? "🟢 Online" : "⚫ " + lastSeen}
           </span>
         </div>
         ${isAdminUser
           ? '<span class="admin-badge">👑 Admin</span>'
-          : `<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+          : `<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
                <button class="admin-user-toggle ${isGranted ? 'unblock':'block'}"
                  onclick="toggleChatGrant('${uid}',${isGranted})">
                  ${isGranted ? '💬 Revoke' : '✅ Grant Chat'}
@@ -710,6 +722,14 @@ function loadAdminUsers() {
                <button class="admin-user-toggle ${isBlocked ? 'unblock':'block'}"
                  onclick="toggleBlock('${uid}',${isBlocked})">
                  ${isBlocked ? '🔓 Unblock' : '🚫 Block'}
+               </button>
+               <button class="admin-user-toggle ${isBanned ? 'unblock':'block'}"
+                 onclick="${isBanned ? `unbanEmail('${user.email}')` : `banEmail('${user.email}','${user.name||'User'}')`}">
+                 ${isBanned ? '✅ Unban' : '⛔ Ban Email'}
+               </button>
+               <button class="admin-user-toggle block"
+                 onclick="removeUser('${uid}','${user.name||'User'}')">
+                 🗑️ Remove
                </button>
              </div>`
         }`;
@@ -732,6 +752,34 @@ function toggleBlock(uid, currently) {
   if (!isAdmin) return;
   const ref = db.ref("settings/blockedUsers/" + uid);
   (currently ? ref.remove() : ref.set(true))
+    .then(() => loadAdminUsers())
+    .catch(e => alert(e.message));
+}
+
+function removeUser(uid, name) {
+  if (!isAdmin) return;
+  if (!confirm(`Remove "${name}" from the users list? They can still log in but lose their profile data.`)) return;
+  // remove user data, revoke chat, block them
+  Promise.all([
+    db.ref("users/" + uid).remove(),
+    db.ref("settings/chatGranted/" + uid).remove(),
+    db.ref("settings/blockedUsers/" + uid).set(true)
+  ]).then(() => { alert("User removed ✔"); loadAdminUsers(); })
+    .catch(e => alert(e.message));
+}
+
+function banEmail(email, name) {
+  if (!isAdmin) return;
+  if (!confirm(`Ban "${name}" (${email})? They will be signed out and blocked from the site.`)) return;
+  const key = sanitize(email);
+  db.ref("settings/bannedEmails/" + key).set(true)
+    .then(() => { alert("Email banned ✔"); loadAdminUsers(); })
+    .catch(e => alert(e.message));
+}
+
+function unbanEmail(email) {
+  if (!isAdmin) return;
+  db.ref("settings/bannedEmails/" + sanitize(email)).remove()
     .then(() => loadAdminUsers())
     .catch(e => alert(e.message));
 }
@@ -827,12 +875,14 @@ function initServiceWorker() {
 function initInstallPrompt() {
   let deferred;
   window.addEventListener("beforeinstallprompt", e => {
-    e.preventDefault(); deferred = e;
+    e.preventDefault();
+    deferred = e;
     const btn = document.createElement("button");
-    btn.textContent = "Install ❤️";
-    btn.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:999";
+    btn.id = "installBtn";
+    btn.textContent = "📲 Install App";
+    btn.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:999;padding:9px 16px;font-size:12px;border-radius:50px;background:linear-gradient(135deg,#e91e8c,#7b2ff7);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(233,30,140,0.4);";
     document.body.appendChild(btn);
-    btn.onclick = () => deferred.prompt();
+    btn.onclick = () => { deferred.prompt(); btn.remove(); };
   });
 }
 

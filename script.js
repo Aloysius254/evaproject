@@ -605,8 +605,13 @@ function checkAdminAccess(user){
   const btn = document.getElementById("adminPanelBtn");
   if(!btn) return;
   const isAdmin = user && user.uid === ADMIN_UID;
-  btn.style.setProperty("display", isAdmin ? "flex" : "none", "important");
-  // also re-apply settings without locks for admin
+  // use class instead of inline style to avoid !important conflicts
+  if(isAdmin){
+    btn.classList.add("admin-visible");
+  } else {
+    btn.classList.remove("admin-visible");
+  }
+  // also clear locks for admin
   if(isAdmin){
     const chatLock = document.getElementById("chatLock");
     const memoriesLock = document.getElementById("memoriesLock");

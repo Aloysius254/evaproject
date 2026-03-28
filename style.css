@@ -1150,7 +1150,7 @@ button:not(#musicBtn):not(#recordBtn):not(.chat-input button):not(.controls butt
 
 /* Admin gear button in chat header */
 #adminPanelBtn {
-  display: none; /* shown only for admin via JS */
+  display: none !important; /* hidden by default, shown via .admin-visible class */
   background: rgba(255,255,255,0.15) !important;
   border: none !important;
   border-radius: 50% !important;
@@ -1162,6 +1162,11 @@ button:not(#musicBtn):not(#recordBtn):not(.chat-input button):not(.controls butt
   margin: 0 !important;
   flex-shrink: 0;
   transition: background 0.2s !important;
+  align-items: center;
+  justify-content: center;
+}
+#adminPanelBtn.admin-visible {
+  display: flex !important;
 }
 #adminPanelBtn:hover { background: rgba(233,30,140,0.4) !important; }
 

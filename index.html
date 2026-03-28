@@ -229,6 +229,8 @@
       <button id="adminPanelBtn" onclick="event.stopPropagation(); openAdminPanel()" title="Admin Panel">⚙️</button>
     </div>
 
+    <!-- Chat hidden until admin grants access -->
+    <div id="chatSection" style="display:none;">
     <div id="chatBox"></div>
     <div id="typingStatus"></div>
 
@@ -249,7 +251,12 @@
       <span id="recordStatus"></span>
       <input type="file" id="photoInput" accept="image/*" style="display:none">
     </div>
-  </div>
+    </div> <!-- end #chatSection -->
+
+    <!-- Shown when chat not yet granted -->
+    <div id="chatPending" class="chat-pending-msg">
+      ⏳ Chat access pending — waiting for admin approval
+    </div>
 </section>
 
 </div> <!-- end #app -->

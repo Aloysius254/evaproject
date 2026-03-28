@@ -347,10 +347,21 @@ auth.onAuthStateChanged(user=>{
       initSettingsListeners(isAdmin);
     }
 
-    setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); checkAdminAccess(user); }, 300);
+    setTimeout(()=>{ setOnline(); loadProfile(); checkAdminAccess(user); }, 300);
 
-    // per-user block listener (skip admin)
+    // per-user block + chat grant listener (skip admin)
     if(!isAdmin){
+      // chat grant — show/hide chatSection
+      db.ref("settings/chatGranted/"+user.uid).on("value", snap => {
+        const isGranted = snap.val() === true;
+        const chatSection = document.getElementById("chatSection");
+        const chatPending = document.getElementById("chatPending");
+        if(chatSection) chatSection.style.display = isGranted ? "block" : "none";
+        if(chatPending) chatPending.style.display = isGranted ? "none" : "block";
+        if(isGranted) loadMessages();
+      });
+
+      // per-user block
       db.ref("settings/blockedUsers/"+user.uid).on("value", snap => {
         const isBlocked = snap.val() === true;
         const chatInput = document.getElementById("chatInput");
@@ -369,6 +380,13 @@ auth.onAuthStateChanged(user=>{
           if(blockedMsg) blockedMsg.style.display = "none";
         }
       });
+    } else {
+      // admin always sees chat
+      const chatSection = document.getElementById("chatSection");
+      const chatPending = document.getElementById("chatPending");
+      if(chatSection) chatSection.style.display = "block";
+      if(chatPending) chatPending.style.display = "none";
+      loadMessages();
     }
   } else {
     // show login screen, hide app
@@ -665,65 +683,74 @@ function loadAdminUsers(){
   if(!list) return;
   list.innerHTML = '<p class="admin-loading">Loading...</p>';
 
-  // load blocked list first, then users
   db.ref("settings/blockedUsers").once("value", blockedSnap => {
     const blocked = blockedSnap.val() || {};
-    db.ref("users").once("value", snap => {
-      const data = snap.val();
-      if(!data){ list.innerHTML = '<p class="admin-loading">No users found.</p>'; return; }
-      list.innerHTML = "";
-      db.ref("status").once("value", statusSnap => {
-        const statuses = statusSnap.val() || {};
-        Object.entries(data).forEach(([uid, user]) => {
-          const emailKey = user.email ? sanitizeKey(user.email) : null;
-          const isOnline = emailKey && statuses[emailKey] && statuses[emailKey].online;
-          const lastSeen = emailKey && statuses[emailKey]
-            ? new Date(statuses[emailKey].lastSeen).toLocaleTimeString() : "Unknown";
-          const isBlocked = !!blocked[uid];
-          const isAdmin = user.email === ADMIN_EMAIL || uid === ADMIN_UID;
+    db.ref("settings/chatGranted").once("value", grantedSnap => {
+      const granted = grantedSnap.val() || {};
+      db.ref("users").once("value", snap => {
+        const data = snap.val();
+        if(!data){ list.innerHTML = '<p class="admin-loading">No users found.</p>'; return; }
+        list.innerHTML = "";
+        db.ref("status").once("value", statusSnap => {
+          const statuses = statusSnap.val() || {};
+          Object.entries(data).forEach(([uid, user]) => {
+            const emailKey = user.email ? sanitizeKey(user.email) : null;
+            const isOnline = emailKey && statuses[emailKey] && statuses[emailKey].online;
+            const lastSeen = emailKey && statuses[emailKey]
+              ? new Date(statuses[emailKey].lastSeen).toLocaleTimeString() : "Unknown";
+            const isBlocked  = !!blocked[uid];
+            const isGranted  = !!granted[uid];
+            const isAdminUser = uid === ADMIN_UID;
 
-          const card = document.createElement("div");
-          card.className = "admin-user-card";
-          card.id = "usercard-" + uid;
-          card.innerHTML = `
-            <img src="${user.photo || 'images/icon.png'}" alt="User photo">
-            <div class="admin-user-info">
-              <strong>${user.name || "Unnamed"}</strong>
-              <span>${user.email || uid}</span>
-              <span style="color:${isOnline ? '#4caf50' : 'var(--text-muted)'}">
-                ${isOnline ? "🟢 Online" : "⚫ Last seen: " + lastSeen}
-              </span>
-            </div>
-            ${isAdmin
-              ? '<span class="admin-badge">👑 Admin</span>'
-              : `<button class="admin-user-toggle ${isBlocked ? 'unblock' : 'block'}"
-                   onclick="toggleUserChat('${uid}', ${isBlocked})">
-                   ${isBlocked ? '✅ Unblock' : '🚫 Block'}
-                 </button>`
-            }
-          `;
-          list.appendChild(card);
+            const card = document.createElement("div");
+            card.className = "admin-user-card";
+            card.id = "usercard-" + uid;
+            card.innerHTML = `
+              <img src="${user.photo || 'images/icon.png'}" alt="User photo">
+              <div class="admin-user-info">
+                <strong>${user.name || "Unnamed"}</strong>
+                <span>${user.email || uid}</span>
+                <span style="color:${isOnline ? '#4caf50' : 'var(--text-muted)'}">
+                  ${isOnline ? "🟢 Online" : "⚫ Last seen: " + lastSeen}
+                </span>
+              </div>
+              ${isAdminUser
+                ? '<span class="admin-badge">👑 Admin</span>'
+                : `<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+                     <button class="admin-user-toggle ${isGranted ? 'unblock' : 'block'}"
+                       onclick="toggleChatGrant('${uid}', ${isGranted})">
+                       ${isGranted ? '💬 Revoke Chat' : '✅ Grant Chat'}
+                     </button>
+                     <button class="admin-user-toggle ${isBlocked ? 'unblock' : 'block'}"
+                       onclick="toggleUserChat('${uid}', ${isBlocked})">
+                       ${isBlocked ? '🔓 Unblock' : '🚫 Block'}
+                     </button>
+                   </div>`
+              }
+            `;
+            list.appendChild(card);
+          });
+        }, err => {
+          list.innerHTML = `<p class="admin-loading">Status error: ${err.message}</p>`;
         });
       }, err => {
-        list.innerHTML = `<p class="admin-loading">Status error: ${err.message}</p>`;
+        list.innerHTML = `<p class="admin-loading" style="color:#ff6b6b;">❌ ${err.message}<br><small>Fix Firebase rules</small></p>`;
       });
-    }, err => {
-      list.innerHTML = `<p class="admin-loading" style="color:#ff6b6b;">❌ ${err.message}<br><small>Fix Firebase rules to allow authenticated reads on /users</small></p>`;
     });
   });
 }
 
-function toggleUserChat(uid, currentlyBlocked){
+function toggleChatGrant(uid, currentlyGranted){
   if(!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) return;
-  const ref = db.ref("settings/blockedUsers/"+uid);
-  if(currentlyBlocked){
+  const ref = db.ref("settings/chatGranted/"+uid);
+  if(currentlyGranted){
     ref.remove()
       .then(() => loadAdminUsers())
-      .catch(err => alert("Unblock failed: " + err.message));
+      .catch(err => alert("Error: " + err.message));
   } else {
     ref.set(true)
       .then(() => loadAdminUsers())
-      .catch(err => alert("Block failed: " + err.message));
+      .catch(err => alert("Error: " + err.message));
   }
 }
 

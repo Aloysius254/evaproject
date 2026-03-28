@@ -1374,3 +1374,35 @@ button:not(#musicBtn):not(#recordBtn):not(.chat-input button):not(.controls butt
   transition: background 0.2s !important;
 }
 .login-btn-secondary:hover { background: rgba(255,255,255,0.12) !important; }
+
+/* chat pending approval */
+.chat-pending-msg {
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  background: #0d1117;
+  border-top: 1px solid var(--glass-border);
+}
+
+/* ensure admin gear is hidden by default via CSS */
+#adminPanelBtn {
+  display: none !important;
+}
+#adminPanelBtn.admin-visible {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.15) !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+  cursor: pointer;
+  box-shadow: none !important;
+  margin: 0 !important;
+  flex-shrink: 0;
+}
+#adminPanelBtn.admin-visible:hover { background: rgba(233,30,140,0.4) !important; }

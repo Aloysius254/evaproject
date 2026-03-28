@@ -873,17 +873,40 @@ function initServiceWorker() {
 }
 
 function initInstallPrompt() {
-  let deferred;
+  // Show install button always — works on both Android and iOS
+  const btn = document.createElement("button");
+  btn.id = "installBtn";
+  btn.textContent = "📲 Install";
+  btn.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:999;padding:9px 16px;font-size:12px;font-weight:700;border-radius:50px;background:linear-gradient(135deg,#e91e8c,#7b2ff7);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(233,30,140,0.4);";
+  document.body.appendChild(btn);
+
+  // Try native prompt first (Android Chrome)
+  let deferred = null;
   window.addEventListener("beforeinstallprompt", e => {
     e.preventDefault();
     deferred = e;
-    const btn = document.createElement("button");
-    btn.id = "installBtn";
-    btn.textContent = "📲 Install App";
-    btn.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:999;padding:9px 16px;font-size:12px;border-radius:50px;background:linear-gradient(135deg,#e91e8c,#7b2ff7);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(233,30,140,0.4);";
-    document.body.appendChild(btn);
-    btn.onclick = () => { deferred.prompt(); btn.remove(); };
   });
+
+  btn.onclick = () => {
+    if (deferred) {
+      deferred.prompt();
+      deferred = null;
+      btn.remove();
+    } else {
+      // iOS or already installed — show manual instructions
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      if (isIOS) {
+        alert("To install on iPhone/iPad:\n\n1. Tap the Share button (□↑) at the bottom\n2. Scroll down and tap \"Add to Home Screen\"\n3. Tap \"Add\"");
+      } else {
+        alert("To install:\n\n1. Tap the 3-dot menu (⋮) in Chrome\n2. Tap \"Add to Home screen\"\n3. Tap \"Add\"");
+      }
+    }
+  };
+
+  // Hide button if already running as installed PWA
+  if (window.matchMedia("(display-mode: standalone)").matches) {
+    btn.remove();
+  }
 }
 
 // ============================================================

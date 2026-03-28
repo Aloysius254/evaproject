@@ -1,962 +1,809 @@
-function register(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  auth.createUserWithEmailAndPassword(email, password)
-    .then(()=> alert("Account created ❤️"))
-    .catch(err => alert(err.message));
-}
+// ============================================================
+// FIREBASE INIT
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyCDjfXhTYoAqhUCTMbrOB5uiZeU7dDqgbo",
+  authDomain: "aloeva-chatbot.firebaseapp.com",
+  databaseURL: "https://aloeva-chatbot-default-rtdb.firebaseio.com",
+  projectId: "aloeva-chatbot",
+  storageBucket: "aloeva-chatbot.firebasestorage.app",
+  messagingSenderId: "216931642104",
+  appId: "1:216931642104:web:68522fe6c57aa79565a90d"
+};
+firebase.initializeApp(firebaseConfig);
+const db      = firebase.database();
+const auth    = firebase.auth();
+const storage = firebase.storage();
 
-function login(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  auth.signInWithEmailAndPassword(email, password)
-    .then(()=>{})
-    .catch((error)=> {
-      console.log(error);
-      alert(error.message);
-    });
-}
+// ============================================================
+// CONSTANTS
+// ============================================================
+const ADMIN_UID    = "kaoSNHGn7vZhhsSpfeUv6w6UkCw1";
+const ADMIN_EMAIL  = "aloysiusmworia@gmail.com";
+const SECRET_KEY   = "aloeva123.";
+const QUIZ_ANSWER  = btoa("school");
+const CARD_PAIRS   = ["🌹","🌹","💋","💋","🎁","🎁","💍","💍"];
 
-function resetPassword(){
-  const email = document.getElementById("email").value.trim();
-  if(!email){ alert("Enter your email address first 📧"); return; }
-  auth.sendPasswordResetEmail(email)
-    .then(()=> alert("Password reset email sent to " + email + " ❤️\nCheck your inbox."))
-    .catch(err => alert(err.message));
-}
+// ============================================================
+// STATE
+// ============================================================
+let currentUser   = null;
+let isAdmin       = false;
+let heartsEnabled = true;
+let heartsInterval = null;
 
-function togglePassword(){
-  const input = document.getElementById("password");
-  const btn = document.getElementById("eyeBtn");
-  if(!input) return;
-  if(input.type === "password"){
-    input.type = "text";
-    btn.textContent = "🙈";
+// ============================================================
+// AUTH — single entry point, everything flows from here
+// ============================================================
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  isAdmin     = user ? user.uid === ADMIN_UID : false;
+
+  const loginScreen = document.getElementById("loginScreen");
+  const app         = document.getElementById("app");
+
+  if (user) {
+    loginScreen.style.display = "none";
+    app.style.display         = "block";
+    onLogin(user);
   } else {
-    input.type = "password";
-    btn.textContent = "👁️";
+    loginScreen.style.display = "flex";
+    app.style.display         = "none";
+    stopHearts();
+  }
+});
+
+function onLogin(user) {
+  // save user profile to Firebase
+  const saved = localStorage.getItem("username");
+  if (!saved) {
+    const name = prompt("Enter your display name ❤️") || "Anonymous";
+    localStorage.setItem("username", name);
+    db.ref("users/" + user.uid).set({ name, email: user.email });
+  } else {
+    db.ref("users/" + user.uid).update({ email: user.email });
+  }
+
+  loadProfile();
+  setOnline();
+  startHearts();
+  initSettingsListeners();
+  initApp();
+
+  if (isAdmin) {
+    showAdminUI();
+  } else {
+    hideAdminUI();
+    listenChatGrant(user.uid);
+    listenBlockStatus(user.uid);
   }
 }
 
-// Enter key on email/password → login
-document.addEventListener("DOMContentLoaded", ()=>{
-  ["email","password"].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.addEventListener("keydown", e=>{
-      if(e.key === "Enter"){ e.preventDefault(); login(); }
-    });
-  });
-});
+// ============================================================
+// ADMIN UI — show/hide gear and unlock everything
+// ============================================================
+function showAdminUI() {
+  // show gear button
+  const btn = document.getElementById("adminPanelBtn");
+  if (btn) btn.style.display = "inline-flex";
 
-// Prompt for username once
-if(!localStorage.getItem("user")){
-  let name = prompt("Enter your name ❤️");
-  localStorage.setItem("user", name || "me");
+  // admin always has full chat access
+  el("chatSection").style.display  = "block";
+  el("chatPending").style.display  = "none";
+  el("chatLock")   && (el("chatLock").style.display    = "none");
+  el("memoriesLock") && (el("memoriesLock").style.display = "none");
+
+  loadMessages();
 }
 
-// =============================
-// 🚀 SAFE START
-// =============================
-document.addEventListener("DOMContentLoaded", () => {
-  initApp();
-});
+function hideAdminUI() {
+  const btn = document.getElementById("adminPanelBtn");
+  if (btn) btn.style.display = "none";
+}
 
-function initApp(){
-  showSection("home");
+// ============================================================
+// CHAT GRANT — per user
+// ============================================================
+function listenChatGrant(uid) {
+  db.ref("settings/chatGranted/" + uid).on("value", snap => {
+    const granted = snap.val() === true;
+    el("chatSection").style.display = granted ? "block" : "none";
+    el("chatPending").style.display = granted ? "none"  : "block";
+    if (granted) loadMessages();
+  });
+}
+
+// ============================================================
+// BLOCK STATUS — per user
+// ============================================================
+function listenBlockStatus(uid) {
+  db.ref("settings/blockedUsers/" + uid).on("value", snap => {
+    const blocked = snap.val() === true;
+    const inp     = el("chatInput");
+    const send    = document.querySelector(".chat-input button");
+    const rec     = el("recordBtn");
+    const msg     = el("chatBlockedMsg");
+    if (inp)  inp.disabled  = blocked;
+    if (send) send.disabled = blocked;
+    if (rec)  rec.disabled  = blocked;
+    if (msg)  msg.style.display = blocked ? "block" : "none";
+  });
+}
+
+// ============================================================
+// SETTINGS LISTENERS — hearts, memories, chat (global)
+// ============================================================
+function initSettingsListeners() {
+  db.ref("settings/heartsEnabled").on("value", snap => {
+    heartsEnabled = snap.val() !== false;
+    const cb = el("toggleHearts");
+    if (cb) cb.checked = heartsEnabled;
+  });
+
+  db.ref("settings/memoriesEnabled").on("value", snap => {
+    const on   = snap.val() !== false;
+    const lock = el("memoriesLock");
+    if (lock) lock.style.display = (on || isAdmin) ? "none" : "flex";
+    const cb = el("toggleMemories");
+    if (cb) cb.checked = on;
+  });
+
+  db.ref("settings/chatEnabled").on("value", snap => {
+    const on   = snap.val() !== false;
+    const lock = el("chatLock");
+    if (lock) lock.style.display = (on || isAdmin) ? "none" : "flex";
+    const cb = el("toggleChat");
+    if (cb) cb.checked = on;
+    if (!isAdmin) {
+      const inp  = el("chatInput");
+      const send = document.querySelector(".chat-input button");
+      if (inp)  inp.disabled  = !on;
+      if (send) send.disabled = !on;
+    }
+  });
+}
+
+// ============================================================
+// APP INIT
+// ============================================================
+function initApp() {
+  const saved = localStorage.getItem("currentPage") || "home";
+  showSection(saved);
   updateCounter();
-  initComments();
   initLightboxSwipe();
   initServiceWorker();
   initInstallPrompt();
 }
 
-// =============================
-// 📱 SECTION SWITCHING
-// =============================
-function handleRatingVisibility(section){
-  const rating = document.getElementById("site-rating");
-  if(!rating) return;
-
-  if(window.innerWidth <= 768){
-    rating.style.display = (section === "game") ? "block" : "none";
-  } else {
-    rating.style.display = "block";
-  }
-}
-
-window.showSection = function(id){
-  const sections = document.querySelectorAll("section");
-  sections.forEach(sec=>{
-    if(sec.id !== "site-rating") sec.style.display = "none";
+// ============================================================
+// SECTION SWITCHING
+// ============================================================
+window.showSection = function(id) {
+  document.querySelectorAll("#app section").forEach(s => {
+    if (s.id !== "site-rating") s.style.display = "none";
   });
-  const target = document.getElementById(id);
-  if(target) target.style.display = "block";
+  const t = el(id);
+  if (t) t.style.display = "block";
 
-  // update active nav link
   document.querySelectorAll("nav a").forEach(a => a.classList.remove("active"));
-  const activeLink = document.getElementById("nav-"+id);
-  if(activeLink) activeLink.classList.add("active");
-
-  // re-apply admin access whenever game section (which has the button) is shown
-  if(id === "game" && auth.currentUser){
-    checkAdminAccess(auth.currentUser);
-    if(auth.currentUser.uid === ADMIN_UID){
-      const chatSection = document.getElementById("chatSection");
-      const chatPending = document.getElementById("chatPending");
-      if(chatSection) chatSection.style.display = "block";
-      if(chatPending) chatPending.style.display = "none";
-    }
-  }
+  const link = el("nav-" + id);
+  if (link) link.classList.add("active");
 
   handleRatingVisibility(id);
   localStorage.setItem("currentPage", id);
+};
+
+function handleRatingVisibility(id) {
+  const r = el("site-rating");
+  if (!r) return;
+  r.style.display = (window.innerWidth <= 768 && id !== "game") ? "none" : "block";
 }
 
-window.addEventListener("load", () => {
-  const savedPage = localStorage.getItem("currentPage") || "home";
-  showSection(savedPage);
-}); 
-
-// =============================
-// 👉 IMPROVED SWIPE NAVIGATION
-// =============================
-let startX = 0, startY = 0, endX = 0, endY = 0;
-const pages = ["home", "story", "memories", "game"];
-
-function getCurrentPage() {
-  let current = "home";
-  pages.forEach(id => {
-    const el = document.getElementById(id);
-    if (el && el.style.display === "block") current = id;
-  });
-  return current;
-}
-
+// swipe navigation
+let swipeStartX = 0, swipeStartY = 0;
+const pages = ["home","story","memories","game"];
 document.addEventListener("touchstart", e => {
   if (["INPUT","TEXTAREA"].includes(e.target.tagName)) return;
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
+  swipeStartX = e.touches[0].clientX;
+  swipeStartY = e.touches[0].clientY;
 });
-
 document.addEventListener("touchend", e => {
   if (["INPUT","TEXTAREA"].includes(e.target.tagName)) return;
-  endX = e.changedTouches[0].clientX;
-  endY = e.changedTouches[0].clientY;
-  handleSwipe();
+  const dx = swipeStartX - e.changedTouches[0].clientX;
+  const dy = swipeStartY - e.changedTouches[0].clientY;
+  if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 120) return;
+  const cur = pages.find(id => { const s = el(id); return s && s.style.display === "block"; }) || "home";
+  const i = pages.indexOf(cur);
+  if (dx > 0 && i < pages.length - 1) showSection(pages[i + 1]);
+  if (dx < 0 && i > 0)                showSection(pages[i - 1]);
 });
 
-function handleSwipe() {
-  const diffX = startX - endX, diffY = startY - endY;
-  if (Math.abs(diffY) > Math.abs(diffX)) return;
-  if (Math.abs(diffX) < 120) return;
+// ============================================================
+// COUNTER
+// ============================================================
+const startDate = new Date("2025-06-13");
+function updateCounter() {
+  const el_ = el("counter");
+  if (!el_) return;
+  const d    = Date.now() - startDate;
+  const days = Math.floor(d / 86400000);
+  const hrs  = Math.floor((d % 86400000) / 3600000);
+  const mins = Math.floor((d % 3600000)  / 60000);
+  const secs = Math.floor((d % 60000)    / 1000);
+  el_.textContent = `We have loved each other for ${days}d ${hrs}h ${mins}m ${secs}s ❤️`;
+}
+setInterval(updateCounter, 1000);
 
-  const current = getCurrentPage();
-  const index = pages.indexOf(current);
-
-  if(diffX > 0 && index < pages.length-1) showSection(pages[index+1]);
-  else if(diffX < 0 && index > 0) showSection(pages[index-1]);
+// ============================================================
+// MUSIC
+// ============================================================
+function toggleMusic() {
+  const m   = el("bgMusic");
+  const btn = el("musicBtn");
+  if (!m || !btn) return;
+  if (m.paused) { m.play();  btn.textContent = "🎵 Pause Music"; }
+  else          { m.pause(); btn.textContent = "🎵 Play Music";  }
 }
 
-// =============================
-// 🎵 MUSIC
-// =============================
-function toggleMusic(){
-  const music = document.getElementById("bgMusic");
-  const btn = document.getElementById("musicBtn");
-  if(!music || !btn) return;
+// ============================================================
+// POPUP
+// ============================================================
+function showPopup() { const p = el("popup"); if (p) { p.style.display = "flex"; } }
+function closePopup(){ const p = el("popup"); if (p) { p.style.display = "none"; } }
 
-  if(music.paused){
-    music.play();
-    btn.textContent = "🎵 Pause Music";
-  } else {
-    music.pause();
-    btn.textContent = "🎵 Play Music";
-  }
+// ============================================================
+// FLOATING HEARTS
+// ============================================================
+function startHearts() {
+  if (heartsInterval) return;
+  heartsInterval = setInterval(() => {
+    if (!heartsEnabled) return;
+    const h = document.createElement("div");
+    h.className   = "heart";
+    h.textContent = "❤️";
+    h.style.left     = Math.random() * 100 + "vw";
+    h.style.fontSize = (15 + Math.random() * 25) + "px";
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 6000);
+  }, 500);
+}
+function stopHearts() {
+  clearInterval(heartsInterval);
+  heartsInterval = null;
 }
 
-// =============================
-// ❤️ LOVE COUNTER
-// =============================
-let startDate = new Date("2025-06-13");
-function updateCounter(){
-  const el = document.getElementById("counter");
-  if(!el) return;
-
-  const now = new Date();
-  const diff = now - startDate;
-  const days = Math.floor(diff / (1000*60*60*24));
-  const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-  const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
-  const secs = Math.floor((diff % (1000*60)) / 1000);
-  el.innerHTML = `We have loved each other for ${days} days, ${hours}h ${mins}m ${secs}s ❤️`;
+// ============================================================
+// RATING
+// ============================================================
+function rateSite(rating) {
+  const stars = document.querySelectorAll(".rating-stars span");
+  stars.forEach((s, i) => {
+    s.classList.toggle("active", i < rating);
+  });
+  const msgs = ["","💔 We can do better","😊 Getting stronger","❤️ Beautiful love","💖 Almost perfect","💞 Perfect love"];
+  const r = el("ratingResult");
+  if (r) r.textContent = msgs[rating];
+  localStorage.setItem("loveRating", rating);
 }
-setInterval(updateCounter,1000);
 
-// =============================
-// 💌 POPUP
-// =============================
-function showPopup(){ const p=document.getElementById("popup"); if(p){ p.style.display="flex"; p.classList.add("active"); } }
-function closePopup(){ const p=document.getElementById("popup"); if(p){ p.style.display="none"; p.classList.remove("active"); } }
-
-// =============================
-// 💬 COMMENTS
-// =============================
-function initComments(){
-  const form=document.getElementById("commentForm");
-  const list=document.getElementById("commentList");
-  if(!form||!list) return;
-
-  form.addEventListener("submit",(e)=>{
-    e.preventDefault();
-    const name=document.getElementById("name").value;
-    const comment=document.getElementById("comment").value;
-    const div=document.createElement("div");
-    div.innerHTML=`<p><strong>${name}:</strong> ${comment}</p>`;
-    list.appendChild(div);
-    form.reset();
+// ============================================================
+// LIGHTBOX
+// ============================================================
+let lightboxIndex = 0;
+function openLightbox(img) {
+  const box = el("lightbox");
+  if (!box) return;
+  box.style.display = "flex";
+  el("lightbox-img").src = img.src;
+  lightboxIndex = Array.from(document.querySelectorAll(".gallery img")).indexOf(img);
+}
+function closeLightbox() { el("lightbox").style.display = "none"; }
+function nextImage() { moveLight(1); }
+function prevImage() { moveLight(-1); }
+function moveLight(dir) {
+  const imgs = document.querySelectorAll(".gallery img");
+  lightboxIndex = (lightboxIndex + dir + imgs.length) % imgs.length;
+  el("lightbox-img").src = imgs[lightboxIndex].src;
+}
+function initLightboxSwipe() {
+  const box = el("lightbox");
+  if (!box) return;
+  let sx = 0;
+  box.addEventListener("touchstart", e => { sx = e.touches[0].clientX; });
+  box.addEventListener("touchend",   e => {
+    const dx = sx - e.changedTouches[0].clientX;
+    if (dx > 50) nextImage();
+    if (dx < -50) prevImage();
   });
 }
 
-// =============================
-// ❤️ FLOATING HEARTS
-// =============================
-let heartsEnabled = true;
-
-function createHeart(){
-  if(!heartsEnabled) return;
-  const heart=document.createElement("div");
-  heart.className="heart";
-  heart.innerHTML="❤️";
-  heart.style.left=Math.random()*100+"vw";
-  heart.style.fontSize=(15+Math.random()*25)+"px";
-  document.body.appendChild(heart);
-  setTimeout(()=>heart.remove(),6000);
-}
-setInterval(createHeart,500);
-
-// =============================
-// 🖼️ LIGHTBOX
-// =============================
-let currentIndex=0;
-function openLightbox(img){
-  const box=document.getElementById("lightbox");
-  const image=document.getElementById("lightbox-img");
-  if(!box||!image) return;
-  box.style.display="flex";
-  image.src=img.src;
-  const images=document.querySelectorAll(".gallery img");
-  currentIndex=Array.from(images).indexOf(img);
-}
-function closeLightbox(){ const box=document.getElementById("lightbox"); if(box) box.style.display="none"; }
-function nextImage(){ const images=document.querySelectorAll(".gallery img"); currentIndex=(currentIndex+1)%images.length; document.getElementById("lightbox-img").src=images[currentIndex].src; }
-function prevImage(){ const images=document.querySelectorAll(".gallery img"); currentIndex=(currentIndex-1+images.length)%images.length; document.getElementById("lightbox-img").src=images[currentIndex].src; }
-function initLightboxSwipe(){
-  const box=document.getElementById("lightbox");
-  if(!box) return;
-  let startX=0;
-  box.addEventListener("touchstart", e=>{ startX=e.touches[0].clientX; });
-  box.addEventListener("touchend", e=>{
-    let endX=e.changedTouches[0].clientX;
-    if(startX>endX+50) nextImage();
-    else if(startX<endX-50) prevImage();
+// ============================================================
+// PROFILE
+// ============================================================
+function loadProfile() {
+  if (!currentUser) return;
+  db.ref("users/" + currentUser.uid).once("value", snap => {
+    const d = snap.val();
+    if (!d) return;
+    if (d.name) {
+      localStorage.setItem("username", d.name);
+      const n = el("displayName");
+      if (n) n.textContent = d.name;
+    }
+    if (d.photo) {
+      const p = el("profilePhoto");
+      if (p) p.src = d.photo;
+    }
   });
 }
 
-// =============================
-// ⭐ RATING
-// =============================
-function rateSite(rating){
-  const container=document.getElementById("site-rating");
-  if(!container) return;
-  const stars=container.querySelectorAll("span");
-  const result=document.getElementById("ratingResult");
-  stars.forEach((star,i)=>{
-    star.classList.remove("active","glow");
-    if(i<rating) star.classList.add("active");
-  });
-  const messages=["","💔 We can do better","😊 Getting stronger","❤️ Beautiful love","💖 Almost perfect","💞 Perfect love"];
-  result.innerHTML=messages[rating];
-  localStorage.setItem("loveRating",rating);
+function openProfileModal() {
+  const m = el("profileModal");
+  if (!m) return;
+  el("profileModalPhoto").src       = el("profilePhoto").src;
+  el("profileModalName").textContent = el("displayName").textContent;
+  m.style.display = "flex";
+}
+function closeProfileModal() { el("profileModal").style.display = "none"; }
+document.addEventListener("click", e => {
+  if (e.target === el("profileModal")) closeProfileModal();
+  if (e.target === el("adminPanel"))   closeAdminPanel();
+});
+
+function changeUsername() {
+  if (!currentUser) return;
+  const name = prompt("Enter new display name ❤️");
+  if (!name || !name.trim()) return;
+  const n = name.trim();
+  localStorage.setItem("username", n);
+  db.ref("users/" + currentUser.uid).update({ name: n });
+  el("displayName").textContent = n;
 }
 
-// =============================
-// 🔥 FIREBASE INIT
-// =============================
-const firebaseConfig = { apiKey:"AIzaSyCDjfXhTYoAqhUCTMbrOB5uiZeU7dDqgbo", authDomain:"aloeva-chatbot.firebaseapp.com", databaseURL:"https://aloeva-chatbot-default-rtdb.firebaseio.com", projectId:"aloeva-chatbot", storageBucket:"aloeva-chatbot.firebasestorage.app", messagingSenderId:"216931642104", appId:"1:216931642104:web:68522fe6c57aa79565a90d", measurementId:"G-4E0TY3ZF1G"};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const auth = firebase.auth();
-const statusRef = db.ref("status");
-
-// =============================
-// ⚙️ SETTINGS — applied per user after auth resolves
-// =============================
-function applySettingChange(key, val, isAdmin){
-  if(key === "heartsEnabled"){
-    heartsEnabled = val;
-    const cb = document.getElementById("toggleHearts");
-    if(cb) cb.checked = val;
-  }
-  if(key === "memoriesEnabled"){
-    const lock = document.getElementById("memoriesLock");
-    if(lock) lock.style.display = (val || isAdmin) ? "none" : "flex";
-    const cb = document.getElementById("toggleMemories");
-    if(cb) cb.checked = val;
-  }
-  if(key === "chatEnabled"){
-    const lock = document.getElementById("chatLock");
-    if(lock) lock.style.display = (val || isAdmin) ? "none" : "flex";
-    const cb = document.getElementById("toggleChat");
-    if(cb) cb.checked = val;
-    if(!isAdmin){
-      const sendBtn = document.querySelector(".chat-input button");
-      const inp = document.getElementById("chatInput");
-      if(sendBtn) sendBtn.disabled = !val;
-      if(inp) inp.disabled = !val;
+function changePhoto() {
+  if (!currentUser) return;
+  el("photoInput").click();
+  el("photoInput").onchange = async () => {
+    const file = el("photoInput").files[0];
+    if (!file) return;
+    const status = el("recordStatus");
+    if (status) status.textContent = "Uploading...";
+    try {
+      const ref = storage.ref("photos/" + currentUser.uid + ".jpg");
+      await ref.put(file);
+      const url = await ref.getDownloadURL();
+      db.ref("users/" + currentUser.uid).update({ photo: url });
+      el("profilePhoto").src = url;
+      const mp = el("profileModalPhoto");
+      if (mp) mp.src = url;
+      if (status) status.textContent = "Photo updated ✔";
+      setTimeout(() => { if (status) status.textContent = ""; }, 2000);
+    } catch(e) {
+      if (status) status.textContent = "Upload failed ❌";
     }
-  }
+    el("photoInput").value = "";
+  };
 }
 
-// Start listening to settings for a specific user role
-// Called once after auth state is known
-function initSettingsListeners(isAdmin){
-  ["heartsEnabled","memoriesEnabled","chatEnabled"].forEach(key => {
-    db.ref("settings/"+key).on("value", snap => {
-      applySettingChange(key, snap.val() !== false, isAdmin);
-    });
+// ============================================================
+// ONLINE STATUS
+// ============================================================
+function setOnline() {
+  if (!currentUser) return;
+  const key = sanitize(currentUser.email);
+  db.ref("status/" + key).set({ online: true, lastSeen: Date.now() });
+  window.addEventListener("beforeunload", () => {
+    db.ref("status/" + key).set({ online: false, lastSeen: Date.now() });
   });
 }
-
-// sanitize Firebase key
-function sanitizeKey(key){ return key.replace(/[.#$[\]]/g,"-"); }
-
-// 🔄 CHECK LOGIN STATE
-let settingsListenersStarted = false;
-auth.onAuthStateChanged(user=>{
-  const loginScreen = document.getElementById("loginScreen");
-  const app = document.getElementById("app");
-
-  if(user){
-    // hide login, show app
-    if(loginScreen) loginScreen.style.display = "none";
-    if(app) app.style.display = "block";
-
-    const isAdmin = user.uid === ADMIN_UID;
-
-    let username = localStorage.getItem("username");
-    if(!username){
-      username = prompt("Enter your display name ❤️") || "Anonymous";
-      localStorage.setItem("username", username);
-      db.ref("users/"+user.uid).set({ name: username, email: user.email });
-    } else {
-      db.ref("users/"+user.uid).update({ email: user.email });
-    }
-
-    // start settings listeners once with correct role
-    // pass isAdmin explicitly so locks never apply to admin
-    if(!settingsListenersStarted){
-      settingsListenersStarted = true;
-      initSettingsListeners(isAdmin);
-    }
-
-    // admin: immediately clear any locks, show chat, show gear
-    if(isAdmin){
-      const chatLock     = document.getElementById("chatLock");
-      const memoriesLock = document.getElementById("memoriesLock");
-      const chatSection  = document.getElementById("chatSection");
-      const chatPending  = document.getElementById("chatPending");
-      if(chatLock)     chatLock.style.display     = "none";
-      if(memoriesLock) memoriesLock.style.display = "none";
-      if(chatSection)  chatSection.style.display  = "block";
-      if(chatPending)  chatPending.style.display  = "none";
-      loadMessages();
-    }
-
-    // run immediately — no timeout
-    setOnline();
-    loadProfile();
-    checkAdminAccess(user);
-
-    setTimeout(()=>{ checkAdminAccess(user); }, 500); // retry after DOM settles
-
-    // per-user block + chat grant listener (skip admin)
-    if(!isAdmin){
-      // chat grant — show/hide chatSection
-      db.ref("settings/chatGranted/"+user.uid).on("value", snap => {
-        const isGranted = snap.val() === true;
-        const chatSection = document.getElementById("chatSection");
-        const chatPending = document.getElementById("chatPending");
-        if(chatSection) chatSection.style.display = isGranted ? "block" : "none";
-        if(chatPending) chatPending.style.display = isGranted ? "none" : "block";
-        if(isGranted) loadMessages();
-      });
-
-      // per-user block
-      db.ref("settings/blockedUsers/"+user.uid).on("value", snap => {
-        const isBlocked = snap.val() === true;
-        const chatInput = document.getElementById("chatInput");
-        const sendBtn = document.querySelector(".chat-input button");
-        const recordBtn = document.getElementById("recordBtn");
-        const blockedMsg = document.getElementById("chatBlockedMsg");
-        if(isBlocked){
-          if(chatInput) chatInput.disabled = true;
-          if(sendBtn) sendBtn.disabled = true;
-          if(recordBtn) recordBtn.disabled = true;
-          if(blockedMsg) blockedMsg.style.display = "block";
-        } else {
-          if(chatInput) chatInput.disabled = false;
-          if(sendBtn) sendBtn.disabled = false;
-          if(recordBtn) recordBtn.disabled = false;
-          if(blockedMsg) blockedMsg.style.display = "none";
-        }
-      });
-    } // end if(!isAdmin)
-  } else {
-    // show login screen, hide app
-    if(loginScreen) loginScreen.style.display = "flex";
-    if(app) app.style.display = "none";
-    // apply settings as non-admin for any real-time lock changes
-    if(!settingsListenersStarted){
-      settingsListenersStarted = true;
-      initSettingsListeners(false);
+db.ref("status").on("value", snap => {
+  const data    = snap.val() || {};
+  const me      = localStorage.getItem("username");
+  const statusEl = el("userStatus");
+  if (!statusEl) return;
+  for (const key in data) {
+    if (key !== me) {
+      statusEl.textContent = data[key].online
+        ? key + " is online 🟢"
+        : "Last seen: " + new Date(data[key].lastSeen).toLocaleTimeString();
     }
   }
 });
 
-// =============================
-// 👤 LOAD PROFILE
-// =============================
-function loadProfile(){
-  if(!auth.currentUser) return;
-  db.ref("users/"+auth.currentUser.uid).once("value", snap=>{
-    const data=snap.val();
-    if(!data) return;
-    if(data.name){
-      localStorage.setItem("username", data.name);
-      const nameEl=document.getElementById("displayName");
-      if(nameEl) nameEl.textContent=data.name;
-    }
-    if(data.photo){
-      localStorage.setItem("photoURL", data.photo);
-      const img=document.getElementById("profilePhoto");
-      if(img) img.src=data.photo;
-    }
-  });
-}
+// ============================================================
+// CHAT
+// ============================================================
+const encrypt = t => CryptoJS.AES.encrypt(t, SECRET_KEY).toString();
+const decrypt = c => {
+  try {
+    const b = CryptoJS.AES.decrypt(c, SECRET_KEY).toString(CryptoJS.enc.Utf8);
+    return b || c;
+  } catch { return c; }
+};
 
-// =============================
-// 💬 LOAD MESSAGES
-// =============================
-function loadMessages(){
-  const chatBox=document.getElementById("chatBox");
-  db.ref("messages").on("value", snapshot=>{
-    chatBox.innerHTML="";
-    const currentUser=localStorage.getItem("username");
-    snapshot.forEach(child=>{
-      const msg=child.val(), key=child.key;
-      const div=document.createElement("div");
-      div.className=(msg.user===currentUser)?"sent":"received";
+function loadMessages() {
+  const box = el("chatBox");
+  if (!box) return;
+  db.ref("messages").on("value", snap => {
+    box.innerHTML = "";
+    const me = localStorage.getItem("username");
+    snap.forEach(child => {
+      const msg = child.val(), key = child.key;
+      const div = document.createElement("div");
+      div.className = msg.user === me ? "sent" : "received";
 
-      const name=document.createElement("small");
-      name.style.fontWeight="bold";
-      name.style.display="block";
-      name.innerText=msg.user||"Anonymous";
+      const name = document.createElement("small");
+      name.style.cssText = "font-weight:bold;display:block;";
+      name.textContent = msg.user || "Anonymous";
       div.appendChild(name);
 
-      if(msg.voice){
-        const audio=document.createElement("audio");
-        audio.controls=true;
-        audio.src=msg.voice;
-        div.appendChild(audio);
-      } else if(msg.text){
-        let decrypted;
-        try {
-          const bytes = CryptoJS.AES.decrypt(msg.text, SECRET_KEY);
-          const result = bytes.toString(CryptoJS.enc.Utf8);
-          // if result is empty string, decryption failed (old unencrypted message)
-          decrypted = result || msg.text;
-        } catch(e){ decrypted = msg.text; }
-        const text = document.createElement("span");
-        text.innerText = decrypted;
-        div.appendChild(text);
+      if (msg.voice) {
+        const a = document.createElement("audio");
+        a.controls = true; a.src = msg.voice;
+        div.appendChild(a);
+      } else if (msg.text) {
+        const s = document.createElement("span");
+        s.textContent = decrypt(msg.text);
+        div.appendChild(s);
       }
 
-      if(msg.user===currentUser){
-        const tick=document.createElement("small");
-        tick.style.marginLeft="5px";
-        tick.innerText=msg.seen?"✔✔":"✔";
-        div.appendChild(tick);
+      if (msg.user === me) {
+        const t = document.createElement("small");
+        t.style.marginLeft = "5px";
+        t.textContent = msg.seen ? "✔✔" : "✔";
+        div.appendChild(t);
       }
-
-      if(msg.user!==currentUser && !msg.seen) db.ref("messages/"+key).update({seen:true});
-
-      chatBox.appendChild(div);
+      if (msg.user !== me && !msg.seen) db.ref("messages/" + key).update({ seen: true });
+      box.appendChild(div);
     });
-    chatBox.scrollTop=chatBox.scrollHeight;
+    box.scrollTop = box.scrollHeight;
   });
 }
 
-// =============================
-// 🌐 ONLINE/OFFLINE STATUS
-// =============================
-function setOnline(){
-  if(!auth.currentUser) return;
-  const userKey=sanitizeKey(auth.currentUser.email);
-  statusRef.child(userKey).set({ online:true, lastSeen:Date.now() });
-  window.addEventListener("beforeunload", ()=>{
-    statusRef.child(userKey).set({ online:false, lastSeen:Date.now() });
+function sendMessage() {
+  if (!currentUser) return;
+  const inp  = el("chatInput");
+  const text = inp.value.trim();
+  if (!text) return;
+  const lock = el("chatLock");
+  if (lock && lock.style.display !== "none") { alert("Chat is locked 🔒"); return; }
+  if (inp.disabled) { alert("You are restricted from chatting 🚫"); return; }
+  db.ref("messages").push({
+    text: encrypt(text),
+    user: localStorage.getItem("username") || "Anonymous",
+    time: Date.now(),
+    seen: false
+  });
+  inp.value = "";
+}
+
+// typing
+const typingRef = db.ref("typing");
+const chatInput = el("chatInput");
+if (chatInput) {
+  chatInput.addEventListener("input", () => {
+    const u = localStorage.getItem("username");
+    typingRef.set({ user: u, typing: true });
+    setTimeout(() => typingRef.set({ user: u, typing: false }), 1500);
+  });
+  chatInput.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
 }
-statusRef.on("value", snapshot=>{
-  const data=snapshot.val();
-  const currentUser=localStorage.getItem("username");
-  const statusDiv=document.getElementById("userStatus");
-  if(!statusDiv) return;
-  for(let user in data){
-    if(user!==currentUser){
-      if(data[user].online) statusDiv.innerText=user+" is online 🟢";
-      else statusDiv.innerText="Last seen: "+new Date(data[user].lastSeen).toLocaleTimeString();
-    }
-  }
+typingRef.on("value", snap => {
+  const d   = snap.val();
+  const me  = localStorage.getItem("username");
+  const div = el("typingStatus");
+  if (!div) return;
+  div.textContent = (d && d.typing && d.user !== me) ? d.user + " is typing..." : "";
 });
 
-// =============================
-// 🔐 ENCRYPTION
-// =============================
-const SECRET_KEY="aloeva123.";
-function encrypt(text){ return CryptoJS.AES.encrypt(text,SECRET_KEY).toString(); }
-function decrypt(cipher){ return CryptoJS.AES.decrypt(cipher,SECRET_KEY).toString(CryptoJS.enc.Utf8); }
+// ============================================================
+// VOICE RECORDING
+// ============================================================
+let mediaRecorder, audioChunks = [];
+const recordBtn    = el("recordBtn");
+const recordStatus = el("recordStatus");
 
-// =============================
-// 📤 SEND MESSAGE
-// =============================
-function sendMessage(){
-  if(!auth.currentUser){ alert("Login first 🔒"); return; }
-  const chatLock = document.getElementById("chatLock");
-  if(chatLock && chatLock.style.display !== "none"){ alert("Chat is locked by admin 🔒"); return; }
-  const chatInput = document.getElementById("chatInput");
-  if(chatInput && chatInput.disabled){ alert("You have been restricted from chatting 🚫"); return; }
-  const text = chatInput.value.trim();
-  if(!text) return;
-  const username = localStorage.getItem("username")||"Anonymous";
-  db.ref("messages").push({ text:encrypt(text), user:username, time:Date.now(), seen:false });
-  chatInput.value = "";
+if (recordBtn) {
+  recordBtn.addEventListener("mousedown",  startRec);
+  recordBtn.addEventListener("mouseup",    stopRec);
+  recordBtn.addEventListener("touchstart", e => { e.preventDefault(); startRec(); });
+  recordBtn.addEventListener("touchend",   e => { e.preventDefault(); stopRec();  });
 }
 
-// =============================
-// ✍️ TYPING STATUS
-// =============================
-const typingRef=db.ref("typing");
-const chatInput=document.getElementById("chatInput");
-if(chatInput){
-  chatInput.addEventListener("input", ()=>{
-    const user=localStorage.getItem("username");
-    typingRef.set({ user:user, typing:true });
-    setTimeout(()=>{ typingRef.set({ user:user, typing:false }); },1500);
-  });
-  chatInput.addEventListener("keydown", e=>{
-    if(e.key === "Enter" && !e.shiftKey){ e.preventDefault(); sendMessage(); }
-  });
-}
-typingRef.on("value", snapshot=>{
-  const data=snapshot.val();
-  const typingDiv=document.getElementById("typingStatus");
-  const currentUser=localStorage.getItem("username");
-  if(data && data.typing && data.user!==currentUser) typingDiv.innerText=data.user+" is typing...";
-  else typingDiv.innerText="";
-});
-
-// =============================
-// 🎤 VOICE RECORD
-// =============================
-let mediaRecorder, audioChunks=[];
-const recordBtn=document.getElementById("recordBtn");
-const recordStatus=document.getElementById("recordStatus");
-
-recordBtn.addEventListener("mousedown", startRecording);
-recordBtn.addEventListener("mouseup", stopRecording);
-recordBtn.addEventListener("touchstart", e=>{ e.preventDefault(); startRecording(); });
-recordBtn.addEventListener("touchend", e=>{ e.preventDefault(); stopRecording(); });
-
-function startRecording(){
-  if(!auth.currentUser){ alert("Login first 🔒"); return; }
-  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
-    mediaRecorder=new MediaRecorder(stream);
+function startRec() {
+  if (!currentUser) return;
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.start();
-    audioChunks=[];
-    mediaRecorder.ondataavailable=e=>{ audioChunks.push(e.data); };
-    recordBtn.style.background="#e53935";
-    recordBtn.textContent="🔴 Recording...";
-    if(recordStatus) recordStatus.textContent="Release to send";
-  }).catch(()=>alert("Microphone access denied ❌"));
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    recordBtn.style.background = "#e53935";
+    recordBtn.textContent = "🔴 Recording...";
+    if (recordStatus) recordStatus.textContent = "Release to send";
+  }).catch(() => alert("Microphone access denied ❌"));
 }
 
-function stopRecording(){
-  if(!mediaRecorder || mediaRecorder.state==="inactive") return;
+function stopRec() {
+  if (!mediaRecorder || mediaRecorder.state === "inactive") return;
   mediaRecorder.stop();
-  recordBtn.style.background="";
-  recordBtn.textContent="🎤 Hold to Record";
-  if(recordStatus) recordStatus.textContent="Uploading...";
-  mediaRecorder.onstop=async()=>{
-    const blob=new Blob(audioChunks,{type:"audio/webm"});
-    try{
-      const storageRef=firebase.storage().ref("voices/"+Date.now()+".webm");
-      await storageRef.put(blob);
-      const url=await storageRef.getDownloadURL();
-      db.ref("messages").push({ voice:url, user:localStorage.getItem("username")||"me", time:Date.now() });
-      if(recordStatus) recordStatus.textContent="Voice sent ✔";
-      setTimeout(()=>{ if(recordStatus) recordStatus.textContent=""; },2000);
-    } catch(err){
-      console.error("Upload failed:", err);
-      if(recordStatus) recordStatus.textContent="Upload failed ❌";
+  recordBtn.style.background = "";
+  recordBtn.textContent = "🎤 Hold to Record";
+  if (recordStatus) recordStatus.textContent = "Uploading...";
+  mediaRecorder.onstop = async () => {
+    const blob = new Blob(audioChunks, { type: "audio/webm" });
+    try {
+      const ref = storage.ref("voices/" + Date.now() + ".webm");
+      await ref.put(blob);
+      const url = await ref.getDownloadURL();
+      db.ref("messages").push({ voice: url, user: localStorage.getItem("username") || "me", time: Date.now() });
+      if (recordStatus) recordStatus.textContent = "Voice sent ✔";
+      setTimeout(() => { if (recordStatus) recordStatus.textContent = ""; }, 2000);
+    } catch (e) {
+      if (recordStatus) recordStatus.textContent = "Upload failed ❌";
     }
   };
 }
 
-// =============================
-// 👤 PROFILE MODAL
-// =============================
-function openProfileModal(){
-  const modal = document.getElementById("profileModal");
-  const modalPhoto = document.getElementById("profileModalPhoto");
-  const modalName = document.getElementById("profileModalName");
-  const currentPhoto = document.getElementById("profilePhoto");
-  const currentName = document.getElementById("displayName");
-  if(!modal) return;
-  modalPhoto.src = currentPhoto.src;
-  modalName.textContent = currentName.textContent;
-  modal.style.display = "flex";
+// ============================================================
+// AUTH FORMS
+// ============================================================
+function login() {
+  const email = el("email").value.trim();
+  const pass  = el("password").value;
+  auth.signInWithEmailAndPassword(email, pass)
+    .catch(e => alert(e.message));
 }
 
-function closeProfileModal(){
-  const modal = document.getElementById("profileModal");
-  if(modal) modal.style.display = "none";
+function register() {
+  const email = el("email").value.trim();
+  const pass  = el("password").value;
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then(() => alert("Account created ❤️"))
+    .catch(e => alert(e.message));
 }
 
-// close modal on backdrop click
-document.addEventListener("click", e => {
-  const modal = document.getElementById("profileModal");
-  if(modal && e.target === modal) closeProfileModal();
+function resetPassword() {
+  const email = el("email").value.trim();
+  if (!email) { alert("Enter your email first 📧"); return; }
+  auth.sendPasswordResetEmail(email)
+    .then(() => alert("Reset email sent to " + email + " ❤️"))
+    .catch(e => alert(e.message));
+}
+
+function logout() {
+  auth.signOut().then(() => {
+    localStorage.removeItem("username");
+    stopHearts();
+  });
+}
+
+function togglePassword() {
+  const inp = el("password");
+  const btn = el("eyeBtn");
+  if (!inp) return;
+  inp.type = inp.type === "password" ? "text" : "password";
+  btn.textContent = inp.type === "password" ? "👁️" : "🙈";
+}
+
+// enter key on login fields
+document.addEventListener("DOMContentLoaded", () => {
+  ["email","password"].forEach(id => {
+    const e = el(id);
+    if (e) e.addEventListener("keydown", ev => {
+      if (ev.key === "Enter") { ev.preventDefault(); login(); }
+    });
+  });
 });
 
-// =============================
-// 🗑️ ADMIN DELETE CHATS
-// =============================
-const ADMIN_EMAIL = "aloysiusmworia@gmail.com";
-const ADMIN_UID   = "kaoSNHGn7vZhhsSpfeUv6w6UkCw1";
-
-function checkAdminAccess(user){
-  const btn = document.getElementById("adminPanelBtn");
-  if(!btn) return;
-  const isAdmin = user && user.uid === ADMIN_UID;
-  // use class instead of inline style to avoid !important conflicts
-  if(isAdmin){
-    btn.classList.add("admin-visible");
-  } else {
-    btn.classList.remove("admin-visible");
-  }
-  // also clear locks for admin
-  if(isAdmin){
-    const chatLock = document.getElementById("chatLock");
-    const memoriesLock = document.getElementById("memoriesLock");
-    if(chatLock) chatLock.style.display = "none";
-    if(memoriesLock) memoriesLock.style.display = "none";
-  }
-}
-
-// =============================
-// ⚙️ ADMIN PANEL
-// =============================
-function openAdminPanel(){
-  if(!auth.currentUser || auth.currentUser.uid !== ADMIN_UID){ return; }
-  const panel = document.getElementById("adminPanel");
-  if(!panel) return;
-  panel.style.display = "flex";
-  // set email badge
-  const badge = document.getElementById("adminEmail");
-  if(badge) badge.textContent = auth.currentUser.email;
-  // load users and message count
+// ============================================================
+// ADMIN PANEL
+// ============================================================
+function openAdminPanel() {
+  if (!isAdmin) return;
+  const p = el("adminPanel");
+  if (!p) return;
+  p.style.display = "flex";
+  const badge = el("adminEmail");
+  if (badge) badge.textContent = currentUser.email;
   loadAdminUsers();
   loadAdminMsgCount();
 }
 
-function closeAdminPanel(){
-  const panel = document.getElementById("adminPanel");
-  if(panel) panel.style.display = "none";
+function closeAdminPanel() {
+  const p = el("adminPanel");
+  if (p) p.style.display = "none";
 }
 
-// close on backdrop click
-document.addEventListener("click", e => {
-  const panel = document.getElementById("adminPanel");
-  if(panel && e.target === panel) closeAdminPanel();
-});
-
-function switchAdminTab(tab, btn){
-  // hide all tab contents
+function switchAdminTab(tab, btn) {
   document.querySelectorAll(".admin-tab-content").forEach(t => t.style.display = "none");
   document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
-  document.getElementById("adminTab-"+tab).style.display = "block";
+  el("adminTab-" + tab).style.display = "block";
   btn.classList.add("active");
-  if(tab === "users") loadAdminUsers();
-  if(tab === "chats") loadAdminMsgCount();
+  if (tab === "users") loadAdminUsers();
+  if (tab === "chats") loadAdminMsgCount();
 }
 
-function loadAdminUsers(){
-  const list = document.getElementById("adminUserList");
-  if(!list) return;
+function loadAdminUsers() {
+  const list = el("adminUserList");
+  if (!list) return;
   list.innerHTML = '<p class="admin-loading">Loading...</p>';
 
-  db.ref("settings/blockedUsers").once("value", blockedSnap => {
-    const blocked = blockedSnap.val() || {};
-    db.ref("settings/chatGranted").once("value", grantedSnap => {
-      const granted = grantedSnap.val() || {};
-      db.ref("users").once("value", snap => {
-        const data = snap.val();
-        if(!data){ list.innerHTML = '<p class="admin-loading">No users found.</p>'; return; }
-        list.innerHTML = "";
-        db.ref("status").once("value", statusSnap => {
-          const statuses = statusSnap.val() || {};
-          Object.entries(data).forEach(([uid, user]) => {
-            const emailKey = user.email ? sanitizeKey(user.email) : null;
-            const isOnline = emailKey && statuses[emailKey] && statuses[emailKey].online;
-            const lastSeen = emailKey && statuses[emailKey]
-              ? new Date(statuses[emailKey].lastSeen).toLocaleTimeString() : "Unknown";
-            const isBlocked  = !!blocked[uid];
-            const isGranted  = !!granted[uid];
-            const isAdminUser = uid === ADMIN_UID;
+  Promise.all([
+    db.ref("settings/blockedUsers").once("value"),
+    db.ref("settings/chatGranted").once("value"),
+    db.ref("users").once("value"),
+    db.ref("status").once("value")
+  ]).then(([blockedSnap, grantedSnap, usersSnap, statusSnap]) => {
+    const blocked  = blockedSnap.val()  || {};
+    const granted  = grantedSnap.val()  || {};
+    const users    = usersSnap.val()    || {};
+    const statuses = statusSnap.val()   || {};
 
-            const card = document.createElement("div");
-            card.className = "admin-user-card";
-            card.id = "usercard-" + uid;
-            card.innerHTML = `
-              <img src="${user.photo || 'images/icon.png'}" alt="User photo">
-              <div class="admin-user-info">
-                <strong>${user.name || "Unnamed"}</strong>
-                <span>${user.email || uid}</span>
-                <span style="color:${isOnline ? '#4caf50' : 'var(--text-muted)'}">
-                  ${isOnline ? "🟢 Online" : "⚫ Last seen: " + lastSeen}
-                </span>
-              </div>
-              ${isAdminUser
-                ? '<span class="admin-badge">👑 Admin</span>'
-                : `<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
-                     <button class="admin-user-toggle ${isGranted ? 'unblock' : 'block'}"
-                       onclick="toggleChatGrant('${uid}', ${isGranted})">
-                       ${isGranted ? '💬 Revoke Chat' : '✅ Grant Chat'}
-                     </button>
-                     <button class="admin-user-toggle ${isBlocked ? 'unblock' : 'block'}"
-                       onclick="toggleUserChat('${uid}', ${isBlocked})">
-                       ${isBlocked ? '🔓 Unblock' : '🚫 Block'}
-                     </button>
-                   </div>`
-              }
-            `;
-            list.appendChild(card);
-          });
-        }, err => {
-          list.innerHTML = `<p class="admin-loading">Status error: ${err.message}</p>`;
-        });
-      }, err => {
-        list.innerHTML = `<p class="admin-loading" style="color:#ff6b6b;">❌ ${err.message}<br><small>Fix Firebase rules</small></p>`;
-      });
-    });
-  });
-}
-
-function toggleChatGrant(uid, currentlyGranted){
-  if(!auth.currentUser || auth.currentUser.uid !== ADMIN_UID) return;
-  const ref = db.ref("settings/chatGranted/"+uid);
-  if(currentlyGranted){
-    ref.remove()
-      .then(() => loadAdminUsers())
-      .catch(err => alert("Error: " + err.message));
-  } else {
-    ref.set(true)
-      .then(() => loadAdminUsers())
-      .catch(err => alert("Error: " + err.message));
-  }
-}
-
-function loadAdminMsgCount(){
-  const stat = document.getElementById("adminMsgCount");
-  if(!stat) return;
-  stat.textContent = "Counting...";
-  db.ref("messages").once("value", snap => {
-    const count = snap.numChildren();
-    stat.textContent = `📨 Total messages: ${count}`;
-  });
-}
-
-function adminDeleteChats(){
-  if(!auth.currentUser || auth.currentUser.uid !== ADMIN_UID){
-    alert("Access denied ❌"); return;
-  }
-  if(!confirm("Delete ALL chat messages? This cannot be undone.")) return;
-  db.ref("messages").remove()
-    .then(()=>{ alert("All chats cleared ✔"); loadAdminMsgCount(); })
-    .catch(err => alert("Error: " + err.message));
-}
-
-function toggleSetting(key, enabled){
-  db.ref("settings/"+key).set(enabled);
-}
-
-// =============================
-// 🚪 LOGOUT
-// =============================
-function logout(){
-  auth.signOut().then(()=>{
-    localStorage.removeItem("username");
-    localStorage.removeItem("photoURL");
-    settingsListenersStarted = false;
-  });
-}
-
-// =============================
-// ✏️ CHANGE USERNAME
-// =============================
-function changeUsername(){
-  if(!auth.currentUser){ alert("Login first 🔒"); return; }
-  const newName=prompt("Enter new display name ❤️");
-  if(!newName || !newName.trim()) return;
-  const trimmed=newName.trim();
-  localStorage.setItem("username", trimmed);
-  db.ref("users/"+auth.currentUser.uid).update({ name: trimmed });
-  const nameEl=document.getElementById("displayName");
-  if(nameEl) nameEl.textContent=trimmed;
-  alert("Name updated to: "+trimmed+" ❤️");
-}
-
-// =============================
-// 📷 CHANGE PROFILE PHOTO
-// =============================
-function changePhoto(){
-  if(!auth.currentUser){ alert("Login first 🔒"); return; }
-  const input=document.getElementById("photoInput");
-  input.click();
-  input.onchange=async()=>{
-    const file=input.files[0];
-    if(!file) return;
-    const photoStatus=document.getElementById("recordStatus");
-    if(photoStatus) photoStatus.textContent="Uploading photo...";
-    try{
-      const storageRef=firebase.storage().ref("photos/"+auth.currentUser.uid+".jpg");
-      await storageRef.put(file);
-      const url=await storageRef.getDownloadURL();
-      // save to Firebase and localStorage
-      localStorage.setItem("photoURL", url);
-      db.ref("users/"+auth.currentUser.uid).update({ photo: url });
-      // update visible profile photo
-      const img=document.getElementById("profilePhoto");
-      if(img) img.src=url;
-      // also update modal if open
-      const modalPhoto=document.getElementById("profileModalPhoto");
-      if(modalPhoto) modalPhoto.src=url;
-      if(photoStatus) photoStatus.textContent="Photo updated ✔";
-      setTimeout(()=>{ if(photoStatus) photoStatus.textContent=""; },2000);
-    } catch(err){
-      console.error("Photo upload failed:", err);
-      if(photoStatus) photoStatus.textContent="Upload failed ❌";
+    if (!Object.keys(users).length) {
+      list.innerHTML = '<p class="admin-loading">No users found.</p>';
+      return;
     }
-    input.value="";
-  };
+
+    list.innerHTML = "";
+    Object.entries(users).forEach(([uid, user]) => {
+      const eKey     = user.email ? sanitize(user.email) : null;
+      const online   = eKey && statuses[eKey] && statuses[eKey].online;
+      const lastSeen = eKey && statuses[eKey] ? new Date(statuses[eKey].lastSeen).toLocaleTimeString() : "Unknown";
+      const isBlocked  = !!blocked[uid];
+      const isGranted  = !!granted[uid];
+      const isAdminUser = uid === ADMIN_UID;
+
+      const card = document.createElement("div");
+      card.className = "admin-user-card";
+      card.innerHTML = `
+        <img src="${user.photo || 'images/icon.png'}" alt="">
+        <div class="admin-user-info">
+          <strong>${user.name || "Unnamed"}</strong>
+          <span>${user.email || uid}</span>
+          <span style="color:${online ? '#4caf50' : 'var(--text-muted)'}">
+            ${online ? "🟢 Online" : "⚫ " + lastSeen}
+          </span>
+        </div>
+        ${isAdminUser
+          ? '<span class="admin-badge">👑 Admin</span>'
+          : `<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+               <button class="admin-user-toggle ${isGranted ? 'unblock':'block'}"
+                 onclick="toggleChatGrant('${uid}',${isGranted})">
+                 ${isGranted ? '💬 Revoke' : '✅ Grant Chat'}
+               </button>
+               <button class="admin-user-toggle ${isBlocked ? 'unblock':'block'}"
+                 onclick="toggleBlock('${uid}',${isBlocked})">
+                 ${isBlocked ? '🔓 Unblock' : '🚫 Block'}
+               </button>
+             </div>`
+        }`;
+      list.appendChild(card);
+    });
+  }).catch(e => {
+    list.innerHTML = `<p class="admin-loading" style="color:#ff6b6b">❌ ${e.message}</p>`;
+  });
 }
 
-// =============================
-// 🎮 LOVE GAME
-// =============================
-let lucky=Math.floor(Math.random()*6);
-function checkHeart(el){
-  const boxes=document.querySelectorAll("#level1 .box");
-  const index=Array.from(boxes).indexOf(el);
-  if(index===lucky){
-    el.innerHTML="💖";
+function toggleChatGrant(uid, currently) {
+  if (!isAdmin) return;
+  const ref = db.ref("settings/chatGranted/" + uid);
+  (currently ? ref.remove() : ref.set(true))
+    .then(() => loadAdminUsers())
+    .catch(e => alert(e.message));
+}
+
+function toggleBlock(uid, currently) {
+  if (!isAdmin) return;
+  const ref = db.ref("settings/blockedUsers/" + uid);
+  (currently ? ref.remove() : ref.set(true))
+    .then(() => loadAdminUsers())
+    .catch(e => alert(e.message));
+}
+
+function loadAdminMsgCount() {
+  const s = el("adminMsgCount");
+  if (!s) return;
+  db.ref("messages").once("value", snap => {
+    s.textContent = "📨 Total messages: " + snap.numChildren();
+  });
+}
+
+function adminDeleteChats() {
+  if (!isAdmin) return;
+  if (!confirm("Delete ALL messages? Cannot be undone.")) return;
+  db.ref("messages").remove()
+    .then(() => { alert("Cleared ✔"); loadAdminMsgCount(); })
+    .catch(e => alert(e.message));
+}
+
+function toggleSetting(key, val) {
+  if (!isAdmin) return;
+  db.ref("settings/" + key).set(val);
+}
+
+// ============================================================
+// LOVE GAME
+// ============================================================
+let lucky = Math.floor(Math.random() * 6);
+function checkHeart(el_) {
+  const boxes = document.querySelectorAll("#level1 .box");
+  const i = Array.from(boxes).indexOf(el_);
+  if (i === lucky) {
+    el_.innerHTML = "💖";
     alert("You found my heart ❤️");
-    document.getElementById("level1").style.display="none";
-    document.getElementById("level2").style.display="block";
-  } else el.innerHTML="💔";
+    el("level1").style.display = "none";
+    el("level2").style.display = "block";
+  } else el_.innerHTML = "💔";
 }
 
-// quiz answer stored as base64 to avoid plain text in source
-const QUIZ_ANSWER = btoa("school"); // "c2Nob29s"
-function startQuiz(){
-  const q=prompt("Where did we first meet?");
-  if(q && btoa(q.toLowerCase().trim()) === QUIZ_ANSWER){
+function startQuiz() {
+  const q = prompt("Where did we first meet?");
+  if (q && btoa(q.toLowerCase().trim()) === QUIZ_ANSWER) {
     alert("Correct ❤️");
-    document.getElementById("level2").style.display="none";
-    document.getElementById("level3").style.display="block";
+    el("level2").style.display = "none";
+    el("level3").style.display = "block";
     buildMemoryGame();
   } else alert("Try again 💕");
 }
 
-// =============================
-// 🎮 MEMORY MATCH GAME (Level 3)
-// =============================
-const CARD_PAIRS = ["🌹","🌹","💋","💋","🎁","🎁","💍","💍"];
-let flipped=[], matched=0, lockBoard=false;
-
-function buildMemoryGame(){
-  const grid=document.querySelector("#level3 .game-grid");
-  if(!grid) return;
-  const shuffled=[...CARD_PAIRS].sort(()=>Math.random()-0.5);
-  grid.innerHTML="";
-  matched=0; flipped=[];
-  shuffled.forEach(emoji=>{
-    const box=document.createElement("div");
-    box.className="box";
-    box.dataset.value=emoji;
-    box.textContent="💌";
-    box.onclick=()=>flipCard(box);
-    grid.appendChild(box);
+let flipped = [], matched = 0, lockBoard = false;
+function buildMemoryGame() {
+  const grid = document.querySelector("#level3 .game-grid");
+  if (!grid) return;
+  const shuffled = [...CARD_PAIRS].sort(() => Math.random() - 0.5);
+  grid.innerHTML = "";
+  matched = 0; flipped = [];
+  shuffled.forEach(emoji => {
+    const b = document.createElement("div");
+    b.className = "box";
+    b.dataset.value = emoji;
+    b.textContent = "💌";
+    b.onclick = () => flipCard(b);
+    grid.appendChild(b);
   });
 }
 
-function flipCard(el){
-  if(lockBoard || el.classList.contains("matched") || flipped.includes(el)) return;
-  el.textContent=el.dataset.value;
-  flipped.push(el);
-  if(flipped.length===2){
-    lockBoard=true;
-    if(flipped[0].dataset.value===flipped[1].dataset.value){
-      flipped.forEach(c=>c.classList.add("matched"));
-      matched++;
-      flipped=[]; lockBoard=false;
-      if(matched===CARD_PAIRS.length/2){
-        setTimeout(()=>{
-          document.getElementById("level3").style.display="none";
-          document.getElementById("final").style.display="block";
-        },600);
+function flipCard(b) {
+  if (lockBoard || b.classList.contains("matched") || flipped.includes(b)) return;
+  b.textContent = b.dataset.value;
+  flipped.push(b);
+  if (flipped.length === 2) {
+    lockBoard = true;
+    if (flipped[0].dataset.value === flipped[1].dataset.value) {
+      flipped.forEach(c => c.classList.add("matched"));
+      matched++; flipped = []; lockBoard = false;
+      if (matched === CARD_PAIRS.length / 2) {
+        setTimeout(() => { el("level3").style.display = "none"; el("final").style.display = "block"; }, 600);
       }
     } else {
-      setTimeout(()=>{
-        flipped.forEach(c=>c.textContent="💌");
-        flipped=[]; lockBoard=false;
-      },900);
+      setTimeout(() => { flipped.forEach(c => c.textContent = "💌"); flipped = []; lockBoard = false; }, 900);
     }
   }
 }
 
-// =============================
-// 📲 SERVICE WORKER
-// =============================
-function initServiceWorker(){
-  if('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
+// ============================================================
+// PWA
+// ============================================================
+function initServiceWorker() {
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js");
 }
 
-// =============================
-// 📥 INSTALL BUTTON
-// =============================
-function initInstallPrompt(){
+function initInstallPrompt() {
   let deferred;
-  window.addEventListener("beforeinstallprompt", e=>{
-    e.preventDefault();
-    deferred=e;
-    const btn=document.createElement("button");
-    btn.innerText="Install ❤️";
-    btn.style.position="fixed";
-    btn.style.bottom="20px";
-    btn.style.right="20px";
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault(); deferred = e;
+    const btn = document.createElement("button");
+    btn.textContent = "Install ❤️";
+    btn.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:999";
     document.body.appendChild(btn);
-    btn.onclick=()=>{ deferred.prompt(); };
+    btn.onclick = () => deferred.prompt();
   });
 }
+
+// ============================================================
+// HELPERS
+// ============================================================
+function el(id) { return document.getElementById(id); }
+function sanitize(s) { return s.replace(/[.#$[\]]/g, "-"); }

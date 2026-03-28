@@ -322,30 +322,32 @@ function sanitizeKey(key){ return key.replace(/[.#$[\]]/g,"-"); }
 // 🔄 CHECK LOGIN STATE
 let settingsListenersStarted = false;
 auth.onAuthStateChanged(user=>{
-  const loginBox=document.getElementById("loginBox");
-  const chat=document.getElementById("chat");
+  const loginScreen = document.getElementById("loginScreen");
+  const app = document.getElementById("app");
+
   if(user){
-    if(loginBox) loginBox.style.display="none";
-    if(chat) chat.style.display="block";
+    // hide login, show app
+    if(loginScreen) loginScreen.style.display = "none";
+    if(app) app.style.display = "block";
 
     const isAdmin = user.uid === ADMIN_UID;
 
-    let username=localStorage.getItem("username");
+    let username = localStorage.getItem("username");
     if(!username){
-      username=prompt("Enter your display name ❤️")||"Anonymous";
-      localStorage.setItem("username",username);
+      username = prompt("Enter your display name ❤️") || "Anonymous";
+      localStorage.setItem("username", username);
       db.ref("users/"+user.uid).set({ name: username, email: user.email });
     } else {
       db.ref("users/"+user.uid).update({ email: user.email });
     }
 
-    // start settings listeners once, with correct role
+    // start settings listeners once with correct role
     if(!settingsListenersStarted){
       settingsListenersStarted = true;
       initSettingsListeners(isAdmin);
     }
 
-    setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); checkAdminAccess(user); },300);
+    setTimeout(()=>{ loadMessages(); setOnline(); loadProfile(); checkAdminAccess(user); }, 300);
 
     // per-user block listener (skip admin)
     if(!isAdmin){
@@ -369,9 +371,10 @@ auth.onAuthStateChanged(user=>{
       });
     }
   } else {
-    if(loginBox) loginBox.style.display="block";
-    if(chat) chat.style.display="none";
-    // logged out — apply settings as non-admin visitor
+    // show login screen, hide app
+    if(loginScreen) loginScreen.style.display = "flex";
+    if(app) app.style.display = "none";
+    // apply settings as non-admin for any real-time lock changes
     if(!settingsListenersStarted){
       settingsListenersStarted = true;
       initSettingsListeners(false);
@@ -755,6 +758,7 @@ function logout(){
   auth.signOut().then(()=>{
     localStorage.removeItem("username");
     localStorage.removeItem("photoURL");
+    settingsListenersStarted = false;
   });
 }
 

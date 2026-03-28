@@ -6,14 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#e91e8c">
   <meta name="description" content="A love story — Eva & Alovea ❤️">
-
   <link rel="manifest" href="/evaproject/manifest.json">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="favicon.png">
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z4F89D35GQ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -24,13 +21,36 @@
 </head>
 <body>
 
+<!-- ═══════════════════════════════════════
+     FULL PAGE LOGIN SCREEN
+════════════════════════════════════════ -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <h1 class="login-title">Eva ❤️ Alovea</h1>
+    <p class="login-subtitle">A private love story</p>
+    <input type="email" id="email" placeholder="Email address" autocomplete="email">
+    <div class="password-wrap">
+      <input type="password" id="password" placeholder="Password" autocomplete="current-password">
+      <span class="eye-btn" onclick="togglePassword()" id="eyeBtn">👁️</span>
+    </div>
+    <button onclick="login()" class="login-btn">Login 💕</button>
+    <button onclick="register()" class="login-btn-secondary">Create Account</button>
+    <button onclick="resetPassword()" class="forgot-btn">Forgot password? Reset it 🔑</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MAIN APP (hidden until logged in)
+════════════════════════════════════════ -->
+<div id="app" style="display:none;">
+
 <!-- NAVBAR -->
 <nav>
   <ul>
-    <li><a href="#" onclick="showSection('home')"   id="nav-home">Home</a></li>
-    <li><a href="#" onclick="showSection('story')"  id="nav-story">Our Story</a></li>
+    <li><a href="#" onclick="showSection('home')"     id="nav-home">Home</a></li>
+    <li><a href="#" onclick="showSection('story')"    id="nav-story">Our Story</a></li>
     <li><a href="#" onclick="showSection('memories')" id="nav-memories">Memories</a></li>
-    <li><a href="#" onclick="showSection('game')"   id="nav-game">Love Game 💘</a></li>
+    <li><a href="#" onclick="showSection('game')"     id="nav-game">Love Game 💘</a></li>
   </ul>
 </nav>
 
@@ -45,18 +65,16 @@
   <h2>Rate Our Story 💕</h2>
   <p class="rating-text">How beautiful is our love? ❤️</p>
   <div class="rating-stars">
-    <span onclick="rateSite(1)" role="button" aria-label="1 star">💙</span>
-    <span onclick="rateSite(2)" role="button" aria-label="2 stars">🤎</span>
-    <span onclick="rateSite(3)" role="button" aria-label="3 stars">💚</span>
-    <span onclick="rateSite(4)" role="button" aria-label="4 stars">💜</span>
-    <span onclick="rateSite(5)" role="button" aria-label="5 stars">❤️</span>
+    <span onclick="rateSite(1)" role="button">💙</span>
+    <span onclick="rateSite(2)" role="button">🤎</span>
+    <span onclick="rateSite(3)" role="button">💚</span>
+    <span onclick="rateSite(4)" role="button">💜</span>
+    <span onclick="rateSite(5)" role="button">❤️</span>
   </div>
   <p id="ratingResult"></p>
 </section>
 
-<!-- ═══════════════════════════════════════
-     HOME
-════════════════════════════════════════ -->
+<!-- HOME -->
 <section id="home" class="hero">
   <div class="hero-banner">
     <img src="images/love-banner.jpg" alt="Our love banner">
@@ -65,7 +83,6 @@
       <p>A love story written in heartbeats and stolen glances</p>
     </div>
   </div>
-
   <div class="hero-content">
     <p class="love-message">
       Eva ❤️, from the moment you came into my life,<br>
@@ -76,21 +93,16 @@
       it's a promise I make to you every day,<br>
       to stand by you, to care for you,<br>
       and to choose you over and over again.<br>
-      No matter where life takes us, my heart belongs to you,<br>
-      now and forever 💕
+      Now and forever 💕
     </p>
-
     <p id="counter"></p>
     <button onclick="showPopup()">Click Me 💌</button>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════
-     OUR STORY
-════════════════════════════════════════ -->
+<!-- OUR STORY -->
 <section id="story" style="display:none;">
   <h2>Our Story ❤️</h2>
-
   <div class="story-timeline">
     <div class="story-point">
       <h3>First Meeting 🌸</h3>
@@ -109,75 +121,60 @@
       <p>Every day with you is my favourite day. Thank you for being mine.</p>
     </div>
   </div>
-
   <div class="story-paragraph">
     <p>
       Our journey together has been a tapestry of beautiful moments, laughter, challenges, and growth.
       Every step we've taken, hand in hand, has strengthened the love we share.
-      Through sunny days and stormy nights, our bond has been unwavering.
       You are my best friend, my confidant, and the love of my life.
-      Each memory we create becomes a treasure I hold close to my heart,
-      reminding me every day why I choose you, over and over again.
-      Your smile, your laughter, and your presence brighten every corner of my life.
       I am grateful for you today, tomorrow, and always ❤️
     </p>
   </div>
-
   <div style="text-align:center;">
     <button onclick="showPopup()">💖 Surprise Message</button>
   </div>
 </section>
 
-<!-- ═══════════════════════════════════════
-     MEMORIES
-════════════════════════════════════════ -->
+<!-- MEMORIES -->
 <section id="memories" style="display:none;">
   <div id="memoriesLock" class="section-lock" style="display:none;">
-    <div class="section-lock-inner">
-      <p>🔒</p>
-      <p>Memories are currently locked by admin</p>
-    </div>
+    <div class="section-lock-inner"><p>🔒</p><p>Memories are currently locked by admin</p></div>
   </div>
   <h2>Our Memories 📸</h2>
-  <p class="memories-subtitle">Each photo tells the story of our love, laughter, and unforgettable moments 💕</p>
-
+  <p class="memories-subtitle">Each photo tells the story of our love 💕</p>
   <div class="gallery">
-    <div class="story-card"><img src="images/favorite9.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Our first adventure together 🌄❤️</p></div>
+    <div class="story-card"><img src="images/favorite9.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Our first adventure 🌄❤️</p></div>
     <div class="story-card"><img src="images/favorite3.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Movie night cuddles 🍿🥰</p></div>
-    <div class="story-card"><img src="images/favorite12.jpg" loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Beach sunset 🌅 with you</p></div>
+    <div class="story-card"><img src="images/favorite12.jpg" loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Beach sunset 🌅</p></div>
     <div class="story-card"><img src="images/favorite4.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Laughing together 😂❤️</p></div>
     <div class="story-card"><img src="images/favorite10.jpg" loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Our special day 💕</p></div>
     <div class="story-card"><img src="images/favorite13.jpg" loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Moments I'll never forget 🥰</p></div>
     <div class="story-card"><img src="images/favorite5.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Another beautiful memory ❤️</p></div>
-    <div class="story-card"><img src="images/favorite8.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Moments with you are priceless 💕</p></div>
-    <div class="story-card"><img src="images/favorite6.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Our first adventure together �❤️</p></div>
-    <div class="story-card"><img src="images/favorite2.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Movie night cuddles �🥰</p></div>
-    <div class="story-card"><img src="images/favorite11.jpg" loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Beach sunset 🌅 with you</p></div>
-    <div class="story-card"><img src="images/favorite7.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Laughing together �❤️</p></div>
+    <div class="story-card"><img src="images/favorite8.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Priceless moments 💕</p></div>
+    <div class="story-card"><img src="images/favorite6.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Our first adventure 🌄❤️</p></div>
+    <div class="story-card"><img src="images/favorite2.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Movie night cuddles 🍿🥰</p></div>
+    <div class="story-card"><img src="images/favorite11.jpg" loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Beach sunset 🌅</p></div>
+    <div class="story-card"><img src="images/favorite7.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Laughing together 😂❤️</p></div>
     <div class="story-card"><img src="images/favorite1.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Our special day 💕</p></div>
     <div class="story-card"><img src="images/favorite13.jpg" loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Moments I'll never forget 🥰</p></div>
     <div class="story-card"><img src="images/favorite10.jpg" loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Another beautiful memory ❤️</p></div>
-    <div class="story-card"><img src="images/favorite9.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Moments with you are priceless 💕</p></div>
+    <div class="story-card"><img src="images/favorite9.jpg"  loading="lazy" onclick="openLightbox(this)" alt="Memory"><p>Priceless moments 💕</p></div>
   </div>
 </section>
 
 <!-- LIGHTBOX -->
 <div id="lightbox" class="lightbox" role="dialog" aria-modal="true">
-  <span class="close" onclick="closeLightbox()" aria-label="Close">✕</span>
+  <span class="close" onclick="closeLightbox()">✕</span>
   <img id="lightbox-img" alt="Memory photo">
   <div class="controls">
-    <button onclick="prevImage()" aria-label="Previous">⟨</button>
-    <button onclick="nextImage()" aria-label="Next">⟩</button>
+    <button onclick="prevImage()">⟨</button>
+    <button onclick="nextImage()">⟩</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     LOVE GAME + CHAT
-════════════════════════════════════════ -->
+<!-- LOVE GAME + CHAT -->
 <section id="game" style="display:none;">
   <h2>💘 Our Love Game 💘</h2>
 
-  <!-- LEVEL 1 -->
   <div id="level1">
     <h3>Level 1: Find My Heart ❤️</h3>
     <div class="game-grid">
@@ -190,67 +187,37 @@
     </div>
   </div>
 
-  <!-- LEVEL 2 -->
   <div id="level2" style="display:none;">
     <h3>Level 2: How Well Do You Know Us? 💞</h3>
     <button onclick="startQuiz()">Start Quiz 💖</button>
   </div>
 
-  <!-- LEVEL 3 -->
   <div id="level3" style="display:none;">
     <h3>Level 3: Match Our Memories 📸</h3>
     <div class="game-grid">
-      <div class="box">💌</div>
-      <div class="box">💌</div>
-      <div class="box">💌</div>
-      <div class="box">💌</div>
-      <div class="box">💌</div>
-      <div class="box">💌</div>
-      <div class="box">💌</div>
-      <div class="box">💌</div>
+      <div class="box">💌</div><div class="box">💌</div>
+      <div class="box">💌</div><div class="box">💌</div>
+      <div class="box">💌</div><div class="box">💌</div>
+      <div class="box">💌</div><div class="box">💌</div>
     </div>
   </div>
 
-  <!-- FINAL -->
   <div id="final" style="display:none;">
     <h2>💍 You Win My Heart Forever 💍</h2>
-    <p>Eva ❤️ you didn't just complete the game… you completed my life 💞</p>
+    <p>Eva ❤️ you completed my life 💞</p>
   </div>
 
   <!-- CHAT -->
   <div class="chat-container">
     <div id="chatLock" class="section-lock" style="display:none;">
-      <div class="section-lock-inner">
-        <p>🔒</p>
-        <p>Chat is currently locked by admin</p>
-      </div>
+      <div class="section-lock-inner"><p>🔒</p><p>Chat is currently locked by admin</p></div>
     </div>
 
-    <!-- Contact links -->
     <div class="contact-links">
-      <a href="https://wa.me/254714782090?text=Hey%20my%20love%20❤️" target="_blank" rel="noopener" class="contact-btn whatsapp">
-        💬 WhatsApp
-      </a>
-      <a href="mailto:aloysiusmworia@gmail.com?subject=Message%20from%20my%20love%20💖&body=Hey%20my%20love..." class="contact-btn email">
-        📧 Email
-      </a>
+      <a href="https://wa.me/254714782090?text=Hey%20my%20love%20❤️" target="_blank" rel="noopener" class="contact-btn whatsapp">💬 WhatsApp</a>
+      <a href="mailto:aloysiusmworia@gmail.com?subject=Message%20from%20my%20love%20💖" class="contact-btn email">📧 Email</a>
     </div>
 
-    <!-- Login -->
-    <div id="loginBox">
-      <h2>Private Chat 🔒</h2>
-      <input type="email" id="email" placeholder="Email address">
-      <div class="password-wrap">
-        <input type="password" id="password" placeholder="Password">
-        <span class="eye-btn" onclick="togglePassword()" id="eyeBtn">👁️</span>
-      </div>
-      <button onclick="register()">Create Account</button>
-      <button onclick="login()">Login</button>
-      <button onclick="resetPassword()" class="forgot-btn">Forgot password? Reset it 🔑</button>
-    </div>
-
-    <!-- Chat UI (hidden until logged in) -->
-    <div id="chat" style="display:none;">
     <p class="chat-section-title">💬 Our Private Chat</p>
 
     <div class="chat-header" onclick="openProfileModal()">
@@ -259,7 +226,7 @@
         <span id="displayName">Eva ❤️</span>
         <div id="userStatus"></div>
       </div>
-      <button id="adminPanelBtn" onclick="event.stopPropagation(); openAdminPanel()" style="display:none;" title="Admin Panel">⚙️</button>
+      <button id="adminPanelBtn" onclick="event.stopPropagation(); openAdminPanel()" title="Admin Panel">⚙️</button>
     </div>
 
     <div id="chatBox"></div>
@@ -282,12 +249,12 @@
       <span id="recordStatus"></span>
       <input type="file" id="photoInput" accept="image/*" style="display:none">
     </div>
-    </div> <!-- end #chat -->
-  </div> <!-- end .chat-container -->
-
+  </div>
 </section>
 
-<!-- PROFILE VIEWER MODAL -->
+</div> <!-- end #app -->
+
+<!-- PROFILE MODAL -->
 <div id="profileModal" style="display:none;" role="dialog" aria-modal="true">
   <div class="profile-modal-inner">
     <button class="profile-modal-close" onclick="closeProfileModal()">✕</button>
@@ -304,30 +271,20 @@
       <h2>⚙️ Admin Panel</h2>
       <button class="admin-close-btn" onclick="closeAdminPanel()">✕</button>
     </div>
-
-    <!-- Tabs -->
     <div class="admin-tabs">
       <button class="admin-tab active" onclick="switchAdminTab('users', this)">👥 Users</button>
       <button class="admin-tab" onclick="switchAdminTab('chats', this)">💬 Chats</button>
       <button class="admin-tab" onclick="switchAdminTab('settings', this)">🔧 Settings</button>
     </div>
-
-    <!-- Users Tab -->
     <div id="adminTab-users" class="admin-tab-content">
       <p class="admin-section-label">Registered Users</p>
-      <div id="adminUserList" class="admin-user-list">
-        <p class="admin-loading">Loading users...</p>
-      </div>
+      <div id="adminUserList" class="admin-user-list"><p class="admin-loading">Loading users...</p></div>
     </div>
-
-    <!-- Chats Tab -->
     <div id="adminTab-chats" class="admin-tab-content" style="display:none;">
       <p class="admin-section-label">Message Management</p>
       <div class="admin-stat" id="adminMsgCount">Counting messages...</div>
       <button class="btn-danger admin-action-btn" onclick="adminDeleteChats()">🗑️ Delete All Messages</button>
     </div>
-
-    <!-- Settings Tab -->
     <div id="adminTab-settings" class="admin-tab-content" style="display:none;">
       <p class="admin-section-label">Site Settings</p>
       <div class="admin-setting-row">
@@ -375,6 +332,5 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="script.js"></script>
-
 </body>
 </html>

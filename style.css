@@ -1365,22 +1365,19 @@ button:not(#musicBtn):not(#recordBtn):not(.chat-input button):not(.controls butt
   border-top: 1px solid var(--glass-border);
 }
 
-/* admin gear icon — div, no button CSS conflicts */
+/* admin gear icon — sits in contact-links row */
 #adminPanelBtn {
   display: none;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
   cursor: pointer;
-  flex-shrink: 0;
-  transition: background 0.2s;
   user-select: none;
 }
 #adminPanelBtn.admin-visible {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
-#adminPanelBtn:hover { background: rgba(233,30,140,0.5); }
+.admin-btn {
+  background: linear-gradient(135deg, var(--pink), var(--purple)) !important;
+  color: #fff !important;
+}
+.admin-btn:hover { opacity: 0.85; transform: translateY(-2px); }

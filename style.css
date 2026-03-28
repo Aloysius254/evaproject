@@ -1148,27 +1148,7 @@ button:not(#musicBtn):not(#recordBtn):not(.chat-input button):not(.controls butt
 .toggle-switch input:checked + .toggle-slider { background: var(--pink); }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
 
-/* Admin gear button in chat header */
-#adminPanelBtn {
-  display: none !important; /* hidden by default, shown via .admin-visible class */
-  background: rgba(255,255,255,0.15) !important;
-  border: none !important;
-  border-radius: 50% !important;
-  width: 34px !important; height: 34px !important;
-  padding: 0 !important;
-  font-size: 16px !important;
-  cursor: pointer;
-  box-shadow: none !important;
-  margin: 0 !important;
-  flex-shrink: 0;
-  transition: background 0.2s !important;
-  align-items: center;
-  justify-content: center;
-}
-#adminPanelBtn.admin-visible {
-  display: flex !important;
-}
-#adminPanelBtn:hover { background: rgba(233,30,140,0.4) !important; }
+/* Admin gear button — hidden by default, shown only for admin */
 
 .admin-loading { color: var(--text-muted); font-size: 13px; text-align: center; padding: 20px 0; }
 

@@ -342,12 +342,25 @@ auth.onAuthStateChanged(user=>{
     }
 
     // start settings listeners once with correct role
+    // pass isAdmin explicitly so locks never apply to admin
     if(!settingsListenersStarted){
       settingsListenersStarted = true;
       initSettingsListeners(isAdmin);
     }
 
-    setTimeout(()=>{ setOnline(); loadProfile(); checkAdminAccess(user); }, 300);
+    // admin: immediately clear any locks and show chat
+    if(isAdmin){
+      const chatLock = document.getElementById("chatLock");
+      const memoriesLock = document.getElementById("memoriesLock");
+      const chatSection = document.getElementById("chatSection");
+      const chatPending = document.getElementById("chatPending");
+      if(chatLock) chatLock.style.display = "none";
+      if(memoriesLock) memoriesLock.style.display = "none";
+      if(chatSection) chatSection.style.display = "block";
+      if(chatPending) chatPending.style.display = "none";
+    }
+
+    setTimeout(()=>{ setOnline(); loadProfile(); checkAdminAccess(user); }, 100);
 
     // per-user block + chat grant listener (skip admin)
     if(!isAdmin){

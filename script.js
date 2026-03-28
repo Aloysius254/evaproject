@@ -54,24 +54,37 @@ auth.onAuthStateChanged(user => {
 });
 
 function onLogin(user) {
-  // save user profile to Firebase
-  const saved = localStorage.getItem("username");
-  if (!saved) {
-    const name = prompt("Enter your display name ❤️") || "Anonymous";
-    localStorage.setItem("username", name);
-    db.ref("users/" + user.uid).set({ name, email: user.email });
-  } else {
+  // always load profile from Firebase first, then check localStorage
+  db.ref("users/" + user.uid).once("value", snap => {
+    const data = snap.val();
+    if (data && data.name) {
+      localStorage.setItem("username", data.name);
+    } else if (!localStorage.getItem("username")) {
+      const name = prompt("Enter your display name ❤️") || "Anonymous";
+      localStorage.setItem("username", name);
+      db.ref("users/" + user.uid).set({ name, email: user.email });
+    }
+    // always keep email updated
     db.ref("users/" + user.uid).update({ email: user.email });
-  }
 
-  loadProfile();
+    // update display name in UI
+    const nameEl = el("displayName");
+    if (nameEl) nameEl.textContent = localStorage.getItem("username");
+
+    // load photo
+    if (data && data.photo) {
+      const p = el("profilePhoto");
+      if (p) p.src = data.photo;
+    }
+  });
+
   setOnline();
   startHearts();
   initSettingsListeners();
   initApp();
 
   if (isAdmin) {
-    showAdminUI();
+    hideAdminUI(); // hide first, showAdminUI called after section renders
   } else {
     hideAdminUI();
     listenChatGrant(user.uid);
@@ -173,6 +186,8 @@ function initApp() {
   initLightboxSwipe();
   initServiceWorker();
   initInstallPrompt();
+  // if admin lands on game section, apply admin UI after DOM is ready
+  if (isAdmin) setTimeout(() => showAdminUI(), 0);
 }
 
 // ============================================================
@@ -188,6 +203,11 @@ window.showSection = function(id) {
   document.querySelectorAll("nav a").forEach(a => a.classList.remove("active"));
   const link = el("nav-" + id);
   if (link) link.classList.add("active");
+
+  // re-apply admin UI every time game section is shown (chat lives there)
+  if (id === "game" && currentUser) {
+    if (isAdmin) showAdminUI();
+  }
 
   handleRatingVisibility(id);
   localStorage.setItem("currentPage", id);

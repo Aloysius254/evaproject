@@ -97,6 +97,17 @@ window.showSection = function(id){
   const activeLink = document.getElementById("nav-"+id);
   if(activeLink) activeLink.classList.add("active");
 
+  // re-apply admin access whenever game section (which has the button) is shown
+  if(id === "game" && auth.currentUser){
+    checkAdminAccess(auth.currentUser);
+    if(auth.currentUser.uid === ADMIN_UID){
+      const chatSection = document.getElementById("chatSection");
+      const chatPending = document.getElementById("chatPending");
+      if(chatSection) chatSection.style.display = "block";
+      if(chatPending) chatPending.style.display = "none";
+    }
+  }
+
   handleRatingVisibility(id);
   localStorage.setItem("currentPage", id);
 }
@@ -348,19 +359,25 @@ auth.onAuthStateChanged(user=>{
       initSettingsListeners(isAdmin);
     }
 
-    // admin: immediately clear any locks and show chat
+    // admin: immediately clear any locks, show chat, show gear
     if(isAdmin){
-      const chatLock = document.getElementById("chatLock");
+      const chatLock     = document.getElementById("chatLock");
       const memoriesLock = document.getElementById("memoriesLock");
-      const chatSection = document.getElementById("chatSection");
-      const chatPending = document.getElementById("chatPending");
-      if(chatLock) chatLock.style.display = "none";
+      const chatSection  = document.getElementById("chatSection");
+      const chatPending  = document.getElementById("chatPending");
+      if(chatLock)     chatLock.style.display     = "none";
       if(memoriesLock) memoriesLock.style.display = "none";
-      if(chatSection) chatSection.style.display = "block";
-      if(chatPending) chatPending.style.display = "none";
+      if(chatSection)  chatSection.style.display  = "block";
+      if(chatPending)  chatPending.style.display  = "none";
+      loadMessages();
     }
 
-    setTimeout(()=>{ setOnline(); loadProfile(); checkAdminAccess(user); }, 100);
+    // run immediately — no timeout
+    setOnline();
+    loadProfile();
+    checkAdminAccess(user);
+
+    setTimeout(()=>{ checkAdminAccess(user); }, 500); // retry after DOM settles
 
     // per-user block + chat grant listener (skip admin)
     if(!isAdmin){
@@ -393,14 +410,7 @@ auth.onAuthStateChanged(user=>{
           if(blockedMsg) blockedMsg.style.display = "none";
         }
       });
-    } else {
-      // admin always sees chat
-      const chatSection = document.getElementById("chatSection");
-      const chatPending = document.getElementById("chatPending");
-      if(chatSection) chatSection.style.display = "block";
-      if(chatPending) chatPending.style.display = "none";
-      loadMessages();
-    }
+    } // end if(!isAdmin)
   } else {
     // show login screen, hide app
     if(loginScreen) loginScreen.style.display = "flex";

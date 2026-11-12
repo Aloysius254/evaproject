@@ -651,3 +651,42 @@ section h2{font-family:var(--vibes);font-size:clamp(2.2rem,5vw,3.4rem);text-alig
   transition: background .2s;
 }
 .register-bio-btn:hover { background: rgba(232,184,75,.16); transform: none; box-shadow: none; }
+
+/* Bio prompt floating card */
+#bioPrompt {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8500;
+  animation: fadeUp .4s ease both;
+  min-width: 300px;
+  max-width: 90vw;
+}
+.bio-prompt-inner {
+  background: linear-gradient(135deg, rgba(20,0,0,.98), rgba(30,10,0,.98));
+  border: 1px solid rgba(232,184,75,.4);
+  border-radius: 18px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6), 0 0 0 1px rgba(232,184,75,.08);
+}
+.bio-prompt-icon { font-size: 2rem; flex-shrink: 0; animation: bioFingerPulse 1.5s ease-in-out infinite; }
+.bio-prompt-text { flex: 1; }
+.bio-prompt-text strong { display: block; color: var(--gold-l); font-size: 14px; font-family: var(--sans); }
+.bio-prompt-text small  { color: var(--muted); font-size: 11px; font-family: var(--sans); }
+.bio-prompt-btns { display: flex; gap: 8px; flex-shrink: 0; }
+.bio-prompt-yes {
+  padding: 8px 16px; border-radius: 50px; font-size: 13px; font-weight: 700;
+  background: linear-gradient(135deg, var(--red), var(--red-d));
+  border: none; color: #fff; cursor: pointer; margin: 0; box-shadow: none;
+}
+.bio-prompt-yes:hover { transform: scale(1.04); }
+.bio-prompt-no {
+  padding: 8px 14px; border-radius: 50px; font-size: 12px; font-weight: 600;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15);
+  color: var(--muted); cursor: pointer; margin: 0; box-shadow: none;
+}
+.bio-prompt-no:hover { background: rgba(255,255,255,.12); transform: none; box-shadow: none; }

@@ -139,23 +139,26 @@ const App = (() => {
       localStorage.setItem(BIO_KEY,  WHO);
       localStorage.setItem(BIO_CRED, idB64);
 
-      if (btn) { btn.style.display = "none"; }
-      // Show the fingerprint button section so they know it's ready
-      const sec = el("biometricSection");
-      if (sec) sec.style.display = "block";
-      err("✅ Fingerprint saved! Next time just tap the fingerprint button.");
+      // Remove the prompt
+      const prompt = el("bioPrompt");
+      if (prompt) prompt.remove();
+      if (btn) { btn.disabled = false; btn.style.display = "none"; }
+
+      // Show a brief success toast
+      showToast("👆 Fingerprint saved! Use it next time you open the app.");
 
     } catch(e) {
       console.error("WebAuthn register error:", e);
-      if (btn) { btn.disabled = false; btn.textContent = "🔐 Save Fingerprint for next time"; }
+      if (btn) { btn.disabled = false; btn.textContent = "Save"; }
       if (e.name === "NotAllowedError") {
-        err("❌ Fingerprint cancelled. Tap the button and try again.");
+        showToast("❌ Fingerprint cancelled. Tap Save to try again.");
       } else if (e.name === "InvalidStateError") {
-        err("⚠️ Fingerprint already registered on this device.");
-        // Still mark as registered
+        // Already registered on this device — just mark it
         localStorage.setItem(BIO_KEY, WHO);
+        const prompt = el("bioPrompt"); if (prompt) prompt.remove();
+        showToast("✅ Fingerprint already saved on this device!");
       } else {
-        err("❌ Could not register fingerprint: " + e.message);
+        showToast("❌ Could not save: " + e.message);
       }
     }
   }
@@ -229,6 +232,46 @@ const App = (() => {
     }
   }
 
+  /* ── BIOMETRIC REGISTRATION PROMPT (shown inside app after first login) ── */
+  function showBioPrompt() {
+    // Don't show if already registered
+    if (localStorage.getItem(BIO_KEY) === WHO) return;
+
+    // Create a floating prompt at the bottom of the app
+    const existing = el("bioPrompt");
+    if (existing) existing.remove();
+
+    const div = document.createElement("div");
+    div.id = "bioPrompt";
+    div.innerHTML = `
+      <div class="bio-prompt-inner">
+        <span class="bio-prompt-icon">👆</span>
+        <div class="bio-prompt-text">
+          <strong>Save Fingerprint?</strong>
+          <small>Log in with one touch next time</small>
+        </div>
+        <div class="bio-prompt-btns">
+          <button onclick="App.registerBiometric()" class="bio-prompt-yes">Save</button>
+          <button onclick="document.getElementById('bioPrompt').remove()" class="bio-prompt-no">Skip</button>
+        </div>
+      </div>`;
+    document.body.appendChild(div);
+
+    // Auto-dismiss after 15 seconds if not tapped
+    setTimeout(() => { const p = el("bioPrompt"); if (p) p.remove(); }, 15000);
+  }
+
+  /* ── TOAST ── */
+  function showToast(msg, duration=4000) {
+    const existing = el("appToast"); if(existing) existing.remove();
+    const t = document.createElement("div");
+    t.id = "appToast";
+    t.textContent = msg;
+    t.style.cssText = "position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(20,0,0,.95);border:1px solid rgba(232,184,75,.35);color:#f5d78e;padding:12px 22px;border-radius:50px;font-size:13px;font-weight:600;z-index:9000;box-shadow:0 4px 20px rgba(0,0,0,.5);font-family:'Segoe UI',sans-serif;white-space:nowrap;animation:fadeUp .3s ease both;";
+    document.body.appendChild(t);
+    setTimeout(()=>{ if(t.parentNode) t.remove(); }, duration);
+  }
+
   function login() {
     const u = (el("loginUser")?.value||"").trim().toLowerCase();
     const p =  el("loginPass")?.value||"";
@@ -238,14 +281,13 @@ const App = (() => {
     if (!user){ err("Unknown username. Use: Mr Aloeva or Mrs Aloeva"); return; }
     if (CryptoJS.SHA256(p).toString() !== user.hash){ err("Wrong password."); return; }
     Session.save(u);
-    // Show "Save fingerprint" button if credential not yet registered
+    boot(u);
+    // After boot, offer fingerprint registration if not yet saved
     bioSupported().then(supported => {
       if (supported && localStorage.getItem(BIO_KEY) !== u) {
-        const rb = el("registerBioBtn");
-        if (rb) rb.style.display = "flex";
+        setTimeout(showBioPrompt, 1500); // slight delay so app is visible first
       }
     });
-    boot(u);
   }
 
   function logout() {

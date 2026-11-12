@@ -1,5 +1,5 @@
 /* ── Cache version — bump this string any time you deploy changes ── */
-const CACHE = "aloeva-v20";
+const CACHE = "aloeva-v21";
 
 const ASSETS = [
   "./",

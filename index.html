@@ -11,68 +11,53 @@
   <link rel="apple-touch-icon" href="favicon.png">
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z4F89D35GQ"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-Z4F89D35GQ');
-  </script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-Z4F89D35GQ');</script>
 </head>
 <body>
 
-<!-- ═══════════════════ LOGIN SCREEN ═══════════════════ -->
+<!-- LOGIN -->
 <div id="loginScreen" class="login-screen">
   <div class="login-card">
+    <div class="login-logo">❤️</div>
     <h1 class="login-title">Eva ❤️ Alovea</h1>
     <p class="login-subtitle">A private love story 💕</p>
-
-    <div id="loginError" class="form-error" aria-live="polite"></div>
-
-    <input type="email" id="email" placeholder="Email address" autocomplete="email" inputmode="email">
+    <div id="loginError" class="form-error"></div>
+    <input type="text" id="loginUser" placeholder="Username" autocomplete="username" spellcheck="false">
     <div class="password-wrap">
-      <input type="password" id="password" placeholder="Password" autocomplete="current-password">
-      <button type="button" class="eye-btn" onclick="App.togglePassword()" id="eyeBtn" aria-label="Toggle password visibility">👁️</button>
+      <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password">
+      <button type="button" class="eye-btn" id="eyeBtn" onclick="App.togglePass()">👁️</button>
     </div>
-
-    <button class="login-btn" onclick="App.login()">Login 💕</button>
-    <button class="login-btn-secondary" onclick="App.register()">Create Account</button>
-    <button class="forgot-btn" onclick="App.resetPassword()">Forgot password? Reset it 🔑</button>
+    <button class="login-btn" onclick="App.login()">Enter Our World 💕</button>
   </div>
 </div>
 
-<!-- ═══════════════════ MAIN APP ═══════════════════ -->
+<!-- APP -->
 <div id="app" style="display:none;">
 
-  <!-- NAVBAR -->
-  <nav role="navigation" aria-label="Main navigation">
+  <nav>
     <ul>
-      <li><a href="#" onclick="App.showSection('home');return false;"     id="nav-home">Home</a></li>
-      <li><a href="#" onclick="App.showSection('story');return false;"    id="nav-story">Our Story</a></li>
-      <li><a href="#" onclick="App.showSection('memories');return false;" id="nav-memories">Memories</a></li>
-      <li><a href="#" onclick="App.showSection('game');return false;"     id="nav-game">Love Game 💘</a></li>
+      <li><a href="#" onclick="App.go('home');return false;"     id="nav-home">Home</a></li>
+      <li><a href="#" onclick="App.go('story');return false;"    id="nav-story">Our Story</a></li>
+      <li><a href="#" onclick="App.go('memories');return false;" id="nav-memories">Memories</a></li>
+      <li><a href="#" onclick="App.go('game');return false;"     id="nav-game">Love Game 💘</a></li>
     </ul>
   </nav>
 
-  <!-- BACKGROUND MUSIC -->
-  <audio id="bgMusic" loop>
-    <source src="music/love.mp3" type="audio/mpeg">
-  </audio>
-  <button id="musicBtn" onclick="App.toggleMusic()" aria-label="Toggle background music">🎵 Play Music</button>
+  <audio id="bgMusic" loop><source src="music/love.mp3" type="audio/mpeg"></audio>
+  <button id="musicBtn" onclick="App.toggleMusic()">🎵 Play Music</button>
 
-  <!-- RATING WIDGET -->
-  <aside id="site-rating" aria-label="Rate our love story">
+  <aside id="site-rating">
     <h2>Rate Our Story 💕</h2>
-    <p class="rating-text">How beautiful is our love? ❤️</p>
-    <div class="rating-stars" role="group" aria-label="Star rating">
-      <span onclick="App.rateSite(1)" role="button" tabindex="0" aria-label="1 star">💙</span>
-      <span onclick="App.rateSite(2)" role="button" tabindex="0" aria-label="2 stars">🤎</span>
-      <span onclick="App.rateSite(3)" role="button" tabindex="0" aria-label="3 stars">💚</span>
-      <span onclick="App.rateSite(4)" role="button" tabindex="0" aria-label="4 stars">💜</span>
-      <span onclick="App.rateSite(5)" role="button" tabindex="0" aria-label="5 stars">❤️</span>
+    <p class="rating-text">How beautiful is our love?</p>
+    <div class="rating-stars">
+      <span onclick="App.rate(1)" role="button" tabindex="0">💙</span>
+      <span onclick="App.rate(2)" role="button" tabindex="0">🤎</span>
+      <span onclick="App.rate(3)" role="button" tabindex="0">💚</span>
+      <span onclick="App.rate(4)" role="button" tabindex="0">💜</span>
+      <span onclick="App.rate(5)" role="button" tabindex="0">❤️</span>
     </div>
-    <p id="ratingResult" aria-live="polite"></p>
+    <p id="ratingResult"></p>
   </aside>
 
   <!-- HOME -->
@@ -96,243 +81,186 @@
         and to choose you over and over again.<br>
         Now and forever 💕
       </p>
-      <p id="counter" aria-live="off"></p>
+      <p id="counter"></p>
       <button onclick="App.showPopup()">Click Me 💌</button>
     </div>
   </section>
 
-  <!-- OUR STORY -->
+  <!-- STORY -->
   <section id="story" style="display:none;">
     <h2>Our Story ❤️</h2>
     <div class="story-timeline">
-      <div class="story-point">
-        <h3>First Meeting 🌸</h3>
-        <p>The day we met, I knew my life had changed forever. Your smile stole my heart.</p>
-      </div>
-      <div class="story-point">
-        <h3>First Date 🌅</h3>
-        <p>Walking together, holding hands, laughing under the sunset — pure magic.</p>
-      </div>
-      <div class="story-point">
-        <h3>Movie Night 🍿</h3>
-        <p>Cuddling on the couch, sharing popcorn, creating memories that last forever.</p>
-      </div>
-      <div class="story-point">
-        <h3>Forever ❤️</h3>
-        <p>Every day with you is my favourite day. Thank you for being mine.</p>
-      </div>
+      <div class="story-point"><h3>First Meeting 🌸</h3><p>The day we met, I knew my life had changed forever. Your smile stole my heart.</p></div>
+      <div class="story-point"><h3>First Date 🌅</h3><p>Walking together, holding hands, laughing under the sunset — pure magic.</p></div>
+      <div class="story-point"><h3>Movie Night 🍿</h3><p>Cuddling on the couch, sharing popcorn, creating memories that last forever.</p></div>
+      <div class="story-point"><h3>Forever ❤️</h3><p>Every day with you is my favourite day. Thank you for being mine.</p></div>
     </div>
-    <div class="story-paragraph">
-      <p>
-        Our journey together has been a tapestry of beautiful moments, laughter, challenges, and growth.
-        Every step we've taken, hand in hand, has strengthened the love we share.
-        You are my best friend, my confidant, and the love of my life.
-        I am grateful for you today, tomorrow, and always ❤️
-      </p>
-    </div>
-    <div style="text-align:center;">
-      <button onclick="App.showPopup()">💖 Surprise Message</button>
-    </div>
+    <div class="story-paragraph"><p>Our journey together has been a tapestry of beautiful moments, laughter, challenges, and growth. Every step we've taken, hand in hand, has strengthened the love we share. You are my best friend, my confidant, and the love of my life. I am grateful for you today, tomorrow, and always ❤️</p></div>
+    <div style="text-align:center;"><button onclick="App.showPopup()">💖 Surprise Message</button></div>
   </section>
 
   <!-- MEMORIES -->
-  <section id="memories" style="display:none;">
-    <div id="memoriesLock" class="section-lock" style="display:none;" aria-hidden="true">
-      <div class="section-lock-inner"><p>🔒</p><p>Memories are currently locked by admin</p></div>
-    </div>
+  <section id="memories" style="display:none; position:relative;">
+    <div id="memoriesLock" class="section-lock" style="display:none;"><div class="section-lock-inner"><p>🔒</p><p>Memories locked by admin</p></div></div>
     <h2>Our Memories 📸</h2>
     <p class="memories-subtitle">Each photo tells the story of our love 💕</p>
-    <div class="gallery" role="list">
-      <div class="story-card" role="listitem"><img src="images/favorite9.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Our first adventure"><p>Our first adventure 🌄❤️</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite3.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Movie night cuddles"><p>Movie night cuddles 🍿🥰</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite12.jpg" loading="lazy" onclick="App.openLightbox(this)" alt="Beach sunset"><p>Beach sunset 🌅</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite4.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Laughing together"><p>Laughing together 😂❤️</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite10.jpg" loading="lazy" onclick="App.openLightbox(this)" alt="Our special day"><p>Our special day 💕</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite13.jpg" loading="lazy" onclick="App.openLightbox(this)" alt="Unforgettable moments"><p>Moments I'll never forget 🥰</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite5.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Beautiful memory"><p>Another beautiful memory ❤️</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite8.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Priceless moments"><p>Priceless moments 💕</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite6.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Our first adventure"><p>Our first adventure 🌄❤️</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite2.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Movie night cuddles"><p>Movie night cuddles 🍿🥰</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite11.jpg" loading="lazy" onclick="App.openLightbox(this)" alt="Beach sunset"><p>Beach sunset 🌅</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite7.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Laughing together"><p>Laughing together 😂❤️</p></div>
-      <div class="story-card" role="listitem"><img src="images/favorite1.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Our special day"><p>Our special day 💕</p></div>
+    <div class="gallery">
+      <div class="story-card"><img src="images/favorite9.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Our first adventure 🌄❤️</p></div>
+      <div class="story-card"><img src="images/favorite3.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Movie night cuddles 🍿🥰</p></div>
+      <div class="story-card"><img src="images/favorite12.jpg" loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Beach sunset 🌅</p></div>
+      <div class="story-card"><img src="images/favorite4.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Laughing together 😂❤️</p></div>
+      <div class="story-card"><img src="images/favorite10.jpg" loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Our special day 💕</p></div>
+      <div class="story-card"><img src="images/favorite13.jpg" loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Moments I'll never forget 🥰</p></div>
+      <div class="story-card"><img src="images/favorite5.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Another beautiful memory ❤️</p></div>
+      <div class="story-card"><img src="images/favorite8.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Priceless moments 💕</p></div>
+      <div class="story-card"><img src="images/favorite6.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Our first adventure 🌄❤️</p></div>
+      <div class="story-card"><img src="images/favorite2.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Movie night cuddles 🍿🥰</p></div>
+      <div class="story-card"><img src="images/favorite11.jpg" loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Beach sunset 🌅</p></div>
+      <div class="story-card"><img src="images/favorite7.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Laughing together 😂❤️</p></div>
+      <div class="story-card"><img src="images/favorite1.jpg"  loading="lazy" onclick="App.openLightbox(this)" alt="Memory"><p>Our special day 💕</p></div>
     </div>
   </section>
 
   <!-- LIGHTBOX -->
-  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" style="display:none;">
-    <button class="lightbox-close" onclick="App.closeLightbox()" aria-label="Close photo viewer">✕</button>
-    <img id="lightbox-img" alt="Memory photo enlarged">
-    <div class="lightbox-controls">
-      <button onclick="App.prevImage()" aria-label="Previous photo">⟨</button>
-      <button onclick="App.nextImage()" aria-label="Next photo">⟩</button>
+  <div id="lightbox" class="lightbox" style="display:none;" role="dialog" aria-modal="true">
+    <button class="lb-close" onclick="App.closeLightbox()">✕</button>
+    <img id="lb-img" alt="Memory photo">
+    <div class="lb-controls">
+      <button onclick="App.prevImg()">⟨</button>
+      <button onclick="App.nextImg()">⟩</button>
     </div>
   </div>
 
-  <!-- LOVE GAME + CHAT -->
+  <!-- GAME + CHAT -->
   <section id="game" style="display:none;">
     <h2>💘 Our Love Game 💘</h2>
 
     <div id="level1" class="game-level">
-      <h3>Level 1: Find My Heart ❤️</h3>
-      <div class="game-grid game-grid-3">
-        <div class="box" onclick="App.checkHeart(this)" role="button" tabindex="0">❤️</div>
-        <div class="box" onclick="App.checkHeart(this)" role="button" tabindex="0">❤️</div>
-        <div class="box" onclick="App.checkHeart(this)" role="button" tabindex="0">❤️</div>
-        <div class="box" onclick="App.checkHeart(this)" role="button" tabindex="0">❤️</div>
-        <div class="box" onclick="App.checkHeart(this)" role="button" tabindex="0">❤️</div>
-        <div class="box" onclick="App.checkHeart(this)" role="button" tabindex="0">❤️</div>
+      <h3>Level 1 — Find My Heart ❤️</h3>
+      <div class="game-grid g3">
+        <div class="box" onclick="App.checkHeart(this)">❤️</div>
+        <div class="box" onclick="App.checkHeart(this)">❤️</div>
+        <div class="box" onclick="App.checkHeart(this)">❤️</div>
+        <div class="box" onclick="App.checkHeart(this)">❤️</div>
+        <div class="box" onclick="App.checkHeart(this)">❤️</div>
+        <div class="box" onclick="App.checkHeart(this)">❤️</div>
       </div>
     </div>
 
     <div id="level2" class="game-level" style="display:none;">
-      <h3>Level 2: How Well Do You Know Us? 💞</h3>
+      <h3>Level 2 — How Well Do You Know Us? 💞</h3>
       <button onclick="App.startQuiz()">Start Quiz 💖</button>
     </div>
 
     <div id="level3" class="game-level" style="display:none;">
-      <h3>Level 3: Match Our Memories 📸</h3>
-      <div class="game-grid game-grid-4" id="memoryGrid"></div>
+      <h3>Level 3 — Match Our Memories 📸</h3>
+      <div class="game-grid g4" id="memoryGrid"></div>
     </div>
 
-    <div id="gameFinal" class="game-level" style="display:none;">
-      <h2>💍 You Win My Heart Forever 💍</h2>
-      <p>Eva ❤️ you completed my life 💞</p>
+    <div id="gameFinal" class="game-level" style="display:none; text-align:center;">
+      <p style="font-size:3rem;">💍</p>
+      <h2 style="-webkit-text-fill-color:#fff;background:none;">You Win My Heart Forever!</h2>
+      <p style="color:var(--muted);">Eva ❤️ you completed my life 💞</p>
     </div>
 
     <!-- CHAT -->
-    <div class="chat-container">
-      <div id="chatLock" class="section-lock" style="display:none;" aria-hidden="true">
-        <div class="section-lock-inner"><p>🔒</p><p>Chat is currently locked by admin</p></div>
-      </div>
+    <div class="chat-wrap" style="position:relative;">
+      <div id="chatLock" class="section-lock" style="display:none;"><div class="section-lock-inner"><p>🔒</p><p>Chat locked by admin</p></div></div>
 
       <div class="contact-links">
-        <a href="https://wa.me/254714782090?text=Hey%20my%20love%20❤️" target="_blank" rel="noopener noreferrer" class="contact-btn whatsapp">💬 WhatsApp</a>
-        <a href="mailto:aloysiusmworia@gmail.com?subject=Message%20from%20my%20love%20💖" class="contact-btn email">📧 Email</a>
+        <a href="https://wa.me/254714782090?text=Hey%20my%20love%20❤️" target="_blank" rel="noopener" class="cbtn wa">💬 WhatsApp</a>
+        <a href="mailto:aloysiusmworia@gmail.com?subject=Message%20from%20my%20love" class="cbtn em">📧 Email</a>
       </div>
 
-      <p class="chat-section-title">💬 Our Private Chat</p>
+      <p class="chat-title">💬 Our Private Chat</p>
 
-      <div class="chat-header" onclick="App.handleProfileTap()" role="button" tabindex="0" aria-label="Open profile">
-        <img id="profilePhoto" src="images/icon.png" alt="Profile photo">
+      <div class="chat-header" onclick="App.headerTap()" role="button" tabindex="0">
+        <img id="profilePhoto" src="images/icon.png" alt="Profile">
         <div class="chat-header-info">
-          <span id="displayName">Eva ❤️</span>
-          <div id="userStatus" aria-live="polite"></div>
+          <span id="displayName">Loading…</span>
+          <span id="onlineStatus"></span>
         </div>
       </div>
 
-      <!-- Chat content — hidden until admin grants access -->
-      <div id="chatSection" style="display:none;">
-        <div id="chatBox" role="log" aria-live="polite" aria-label="Chat messages"></div>
-        <div id="typingStatus" aria-live="polite"></div>
+      <div id="chatBox" style="display:none;" role="log" aria-live="polite"></div>
+      <div id="typingStatus" style="display:none;"></div>
+      <div id="chatBlockedMsg" class="blocked-msg" style="display:none;">🚫 You have been restricted from chatting by admin</div>
 
-        <div id="chatBlockedMsg" class="chat-blocked-msg" style="display:none;" role="alert">
-          🚫 You have been restricted from chatting by admin
-        </div>
-
-        <div class="chat-input">
-          <input type="text" id="chatInput" placeholder="Type a message ❤️" autocomplete="off" aria-label="Message input">
-          <button onclick="App.sendMessage()" aria-label="Send message">Send</button>
-        </div>
-
-        <div class="chat-actions">
-          <button id="recordBtn" aria-label="Hold to record voice message">🎤 Hold to Record</button>
-          <button onclick="App.changeUsername()" aria-label="Change display name">✏️ Name</button>
-          <button onclick="App.changePhoto()" aria-label="Change profile photo">📷 Photo</button>
-          <button onclick="App.logout()" class="btn-danger" aria-label="Logout">🚪 Logout</button>
-          <span id="recordStatus" aria-live="polite"></span>
-          <input type="file" id="photoInput" accept="image/*" style="display:none" aria-hidden="true">
-        </div>
+      <div class="chat-input" style="display:none;">
+        <input type="text" id="chatInput" placeholder="Type a message ❤️" autocomplete="off">
+        <button onclick="App.sendMsg()">Send</button>
       </div>
 
-      <!-- Shown while access is pending -->
-      <div id="chatPending" class="chat-pending-msg" role="status">
-        ⏳ Chat access pending — waiting for admin approval
+      <div class="chat-actions" style="display:none;">
+        <button id="recBtn">🎤 Hold to Record</button>
+        <button onclick="App.changePhoto()">📷 Photo</button>
+        <button class="btn-danger" onclick="App.logout()">🚪 Logout</button>
+        <span id="recStatus"></span>
+        <input type="file" id="photoInput" accept="image/*" style="display:none">
       </div>
     </div>
   </section>
 
-</div><!-- end #app -->
+</div><!-- end app -->
 
-<!-- ═══════════════════ PROFILE MODAL ═══════════════════ -->
-<div id="profileModal" class="modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-label="Profile">
-  <div class="profile-modal-inner">
-    <button class="profile-modal-close" onclick="App.closeProfileModal()" aria-label="Close profile">✕</button>
-    <img id="profileModalPhoto" src="images/icon.png" alt="Your profile photo">
+<!-- PROFILE MODAL -->
+<div id="profileModal" class="backdrop" style="display:none;" role="dialog" aria-modal="true">
+  <div class="profile-inner">
+    <button class="modal-x" onclick="App.closeProfile()">✕</button>
+    <img id="profileModalPhoto" src="images/icon.png" alt="Profile photo">
     <p id="profileModalName"></p>
     <button onclick="App.changePhoto()">📷 Change Photo</button>
   </div>
 </div>
 
-<!-- ═══════════════════ ADMIN PANEL ═══════════════════ -->
-<div id="adminPanel" class="modal-backdrop" style="display:none;" role="dialog" aria-modal="true" aria-label="Admin panel">
-  <div class="admin-panel-inner">
-    <div class="admin-panel-header">
+<!-- ADMIN PANEL -->
+<div id="adminPanel" class="backdrop admin-backdrop" style="display:none;" role="dialog" aria-modal="true">
+  <div class="admin-inner">
+    <div class="admin-head">
       <h2>⚙️ Admin Panel</h2>
-      <button class="admin-close-btn" onclick="App.closeAdminPanel()" aria-label="Close admin panel">✕</button>
+      <button class="modal-x" onclick="App.closeAdmin()">✕</button>
     </div>
-    <div class="admin-tabs" role="tablist">
-      <button class="admin-tab active" role="tab" aria-selected="true"  onclick="App.switchAdminTab('users', this)">👥 Users</button>
-      <button class="admin-tab"        role="tab" aria-selected="false" onclick="App.switchAdminTab('chats', this)">💬 Chats</button>
-      <button class="admin-tab"        role="tab" aria-selected="false" onclick="App.switchAdminTab('settings', this)">🔧 Settings</button>
-    </div>
-
-    <div id="adminTab-users" class="admin-tab-content" role="tabpanel">
-      <p class="admin-section-label">Registered Users</p>
-      <div id="adminUserList" class="admin-user-list"><p class="admin-loading">Loading users…</p></div>
+    <div class="admin-tabs">
+      <button class="atab active" onclick="App.adminTab('users',this)">👥 Users</button>
+      <button class="atab"        onclick="App.adminTab('chats',this)">💬 Chats</button>
+      <button class="atab"        onclick="App.adminTab('settings',this)">🔧 Settings</button>
     </div>
 
-    <div id="adminTab-chats" class="admin-tab-content" style="display:none;" role="tabpanel">
-      <p class="admin-section-label">Message Management</p>
-      <div class="admin-stat" id="adminMsgCount">Counting messages…</div>
-      <button class="btn-danger admin-action-btn" onclick="App.adminDeleteChats()">🗑️ Delete All Messages</button>
+    <div id="adminTab-users" class="atab-panel">
+      <p class="alabel">Users</p>
+      <div id="adminUserList"><p class="aload">Loading…</p></div>
     </div>
 
-    <div id="adminTab-settings" class="admin-tab-content" style="display:none;" role="tabpanel">
-      <p class="admin-section-label">Site Settings</p>
-      <div class="admin-setting-row">
-        <span>Floating Hearts</span>
-        <label class="toggle-switch" aria-label="Toggle floating hearts">
-          <input type="checkbox" id="toggleHearts" checked onchange="App.toggleSetting('heartsEnabled', this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="admin-setting-row">
-        <span>Memories Page</span>
-        <label class="toggle-switch" aria-label="Toggle memories page">
-          <input type="checkbox" id="toggleMemories" checked onchange="App.toggleSetting('memoriesEnabled', this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="admin-setting-row">
-        <span>Private Chat</span>
-        <label class="toggle-switch" aria-label="Toggle private chat">
-          <input type="checkbox" id="toggleChat" checked onchange="App.toggleSetting('chatEnabled', this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="admin-setting-row">
-        <span>Logged in as</span>
-        <span id="adminEmail" class="admin-email-badge"></span>
-      </div>
-      <button class="btn-danger admin-action-btn" onclick="App.logout(); App.closeAdminPanel()">🚪 Logout</button>
+    <div id="adminTab-chats" class="atab-panel" style="display:none;">
+      <p class="alabel">Messages</p>
+      <div class="astat" id="adminMsgCount">Counting…</div>
+      <button class="btn-danger awide" onclick="App.clearMsgs()">🗑️ Delete All Messages</button>
+    </div>
+
+    <div id="adminTab-settings" class="atab-panel" style="display:none;">
+      <p class="alabel">Settings</p>
+      <div class="arow"><span>Floating Hearts</span><label class="toggle"><input type="checkbox" id="toggleHearts" checked onchange="App.setSetting('heartsEnabled',this.checked)"><span class="slider"></span></label></div>
+      <div class="arow"><span>Memories Page</span><label class="toggle"><input type="checkbox" id="toggleMemories" checked onchange="App.setSetting('memoriesEnabled',this.checked)"><span class="slider"></span></label></div>
+      <div class="arow"><span>Private Chat</span><label class="toggle"><input type="checkbox" id="toggleChat" checked onchange="App.setSetting('chatEnabled',this.checked)"><span class="slider"></span></label></div>
+      <div class="arow"><span>Eva Chat Access</span><label class="toggle"><input type="checkbox" id="toggleEvaChat" onchange="App.setSetting('evaChatGranted',this.checked)"><span class="slider"></span></label></div>
+      <div class="arow"><span>Logged in as</span><span id="adminBadge" class="admin-badge"></span></div>
+      <button class="btn-danger awide" onclick="App.logout();App.closeAdmin()">🚪 Logout</button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════ LOVE POPUP ═══════════════════ -->
-<div id="popup" class="popup" role="dialog" aria-modal="true" style="display:none;">
+<!-- POPUP -->
+<div id="popup" class="backdrop" style="display:none;" role="dialog" aria-modal="true">
   <div class="popup-inner">
     <p>Alovea 💓 ❤️<br>You are my everything.<br>I love you forever 💕</p>
     <button onclick="App.closePopup()">Close 💌</button>
   </div>
 </div>
 
-<!-- Firebase SDKs -->
+<!-- Firebase DB + Storage only (no Firebase Auth) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script src="script.js"></script>
 </body>

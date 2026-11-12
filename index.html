@@ -19,8 +19,37 @@
 </head>
 <body>
 
+<!-- ═══════════════════ SPLASH SCREEN ═══════════════════ -->
+<div id="splash" class="splash">
+  <div class="splash-inner">
+    <div class="splash-heart-wrap">
+      <svg class="splash-svg" viewBox="0 0 100 92" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#ff4081"/>
+            <stop offset="100%" stop-color="#e91e8c"/>
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <path class="splash-path"
+          d="M50 85 C50 85 5 55 5 28 C5 14 16 5 28 5 C37 5 44 10 50 18 C56 10 63 5 72 5 C84 5 95 14 95 28 C95 55 50 85 50 85Z"
+          fill="url(#hg)" filter="url(#glow)"/>
+      </svg>
+      <!-- Ripple rings -->
+      <span class="splash-ring r1"></span>
+      <span class="splash-ring r2"></span>
+      <span class="splash-ring r3"></span>
+    </div>
+    <p class="splash-name">Eva ❤️ Alovea</p>
+    <p class="splash-tagline">A love story…</p>
+  </div>
+</div>
+
 <!-- LOGIN -->
-<div id="loginScreen" class="login-screen">
+<div id="loginScreen" class="login-screen" style="opacity:0;pointer-events:none;">
   <div class="login-card">
     <div class="login-logo">
       <span class="pulse-heart">❤️</span>

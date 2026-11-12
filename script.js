@@ -313,9 +313,26 @@ const App = (() => {
 
   /* ── DOM READY ── */
   document.addEventListener("DOMContentLoaded",()=>{
+    // ── Splash → Login transition ──
+    // Splash CSS animation fades out at 2.4s; we show login at 2.5s
+    setTimeout(() => {
+      const ls = el("loginScreen");
+      if (ls) ls.classList.add("visible");
+      // remove splash from DOM after it's fully gone (keeps accessibility clean)
+      const sp = el("splash");
+      if (sp) setTimeout(() => sp.remove(), 400);
+    }, 2500);
+
     const saved=Session.load();
-    if(saved&&USERS[saved]){ boot(saved); }
-    else{ Session.clear(); el("loginScreen").style.display="flex"; el("app").style.display="none"; }
+    if(saved&&USERS[saved]){
+      // Already logged in — remove splash immediately, go to app
+      const sp=el("splash"); if(sp) sp.remove();
+      boot(saved);
+    }
+    else{
+      Session.clear();
+      // Login screen becomes visible after splash fades (handled by setTimeout above)
+    }
 
     ["loginUser","loginPass"].forEach(id=>{ const i=el(id);if(i) i.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();login();}}); });
     document.addEventListener("keydown",e=>{ if(e.key!=="Escape") return; closeLightbox();closeProfile();closeAdmin();closePopup(); });

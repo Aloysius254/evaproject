@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════
    SPLASH
 ═══════════════════════════════════════════ */
-.splash{position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#1a0000 0%,#0d0000 50%,#1a0a00 100%);display:flex;align-items:center;justify-content:center;animation:splashFade .5s ease 0.9s forwards;}
+.splash{position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#1a0000 0%,#0d0000 50%,#1a0a00 100%);display:flex;align-items:center;justify-content:center;animation:splashFade .5s ease 1.8s forwards;}
 @keyframes splashFade{to{opacity:0;pointer-events:none;visibility:hidden;}}
 .splash-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .splash-heart-wrap{position:relative;width:130px;height:130px;display:flex;align-items:center;justify-content:center;}
@@ -15,7 +15,7 @@
 .splash-name{font-family:var(--vibes);font-size:2.4rem;color:#f5d78e;margin-top:24px;text-shadow:0 0 20px rgba(232,184,75,.6);animation:splashTxt .5s ease 0.1s both;}
 .splash-tagline{font-family:var(--font);font-size:.95rem;color:rgba(245,215,142,.6);margin-top:6px;font-style:italic;animation:splashTxt .5s ease 0.25s both;}
 @keyframes splashTxt{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
-.login-screen{transition:opacity .4s ease 1.0s;}
+.login-screen{transition:opacity .4s ease 2.0s;}
 .login-screen.visible{opacity:1!important;pointer-events:auto!important;}
 
 /* ═══════════════════════════════════════════
@@ -519,42 +519,39 @@ section h2{font-family:var(--vibes);font-size:clamp(2.2rem,5vw,3.4rem);text-alig
   to   { transform: rotate(3deg) scale(1.05); }
 }
 
-/* Q3 — card needs relative + hidden so shy button never escapes below */
+/* Q3 shy NO — drifts slowly along the top, slides on click, shivering ice look */
 .q-card-relative {
   position: relative;
-  /* Extra bottom padding gives the button room to roam above chat */
-  padding-bottom: 80px;
+  padding-top: 70px;   /* room at top for the drifting button */
   overflow: hidden;
 }
 
-/* Q3 shy NO — shivering ice look, runs from cursor, stays inside card */
 .q-no-shy {
+  /* position switched to absolute by JS */
   background: linear-gradient(135deg, rgba(80,160,255,.12), rgba(60,120,220,.08));
   border: 1px solid rgba(140,200,255,.35);
   color: rgba(190,225,255,.75);
-  border-radius: 50px; padding: 14px 28px;
-  font-size: 15px; font-weight: 700;
-  font-family: var(--sans); cursor: crosshair; margin: 0;
+  border-radius: 50px; padding: 12px 22px;
+  font-size: 14px; font-weight: 700;
+  font-family: var(--sans); cursor: pointer; margin: 0;
   box-shadow: 0 0 14px rgba(100,180,255,.18), inset 0 0 10px rgba(100,180,255,.07);
   text-shadow: 0 0 10px rgba(140,200,255,.55);
-  /* JS moves it via left/top — smooth spring transition */
-  transition: left .15s cubic-bezier(.17,1.4,.5,1), top .15s cubic-bezier(.17,1.4,.5,1);
+  /* smooth horizontal slide when JS moves it */
+  transition: left .18s cubic-bezier(.17,1.4,.5,1);
   animation: shyShiver 2.8s ease-in-out infinite;
   user-select: none;
-  /* Absolute positioning applied by JS once Q3 card is shown */
+  white-space: nowrap;
 }
 
 @keyframes shyShiver {
   0%,100% { transform: none; filter: none; }
-  8%  { transform: translateX(-2px) rotate(-.4deg); }
-  16% { transform: translateX(2px)  rotate(.4deg); }
-  24% { transform: translateX(-1px); }
-  32% { transform: none; }
-  /* Stronger shiver burst when cursor is far away — idle panic */
+  8%  { transform: translateY(-1px) rotate(-.3deg); }
+  16% { transform: translateY(1px)  rotate(.3deg); }
+  24% { transform: none; }
   82% { transform: none; filter: brightness(1); }
-  84% { transform: translateX(-4px) rotate(-.8deg) scale(.97); filter: brightness(1.3); }
-  86% { transform: translateX(4px)  rotate(.8deg)  scale(1.03); filter: brightness(.8); }
-  88% { transform: translateX(-2px) rotate(-.3deg); filter: brightness(1.1); }
+  84% { transform: translateX(-3px) rotate(-.6deg) scale(.97); filter: brightness(1.3); }
+  86% { transform: translateX(3px)  rotate(.6deg)  scale(1.03); filter: brightness(.8); }
+  88% { transform: translateX(-1px); }
   90% { transform: none; filter: none; }
 }
 

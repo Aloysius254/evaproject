@@ -425,7 +425,8 @@ const App = (() => {
     if (dot) { dot.classList.remove('active'); dot.classList.add('done'); }
 
     if (step === 2) {
-      // Final question answered — show date picker
+      // Final question answered — stop drift, show date picker
+      if (shyRAF) { cancelAnimationFrame(shyRAF); shyRAF = null; }
       el('q2').style.display = 'none';
       el('datePicker').style.display = 'block';
       spawnConfetti();
@@ -447,62 +448,69 @@ const App = (() => {
     }
   }
 
-  /* ── SHY BUTTON for Q3: runs from cursor, stays inside card ── */
+  /* ── SHY BUTTON for Q3: drifts slowly along the top, slides away on click ── */
+  let shyRAF = null;
+  let shyX = 0, shyVX = 0.4; // slow drift speed
+
   function initShyBtn() {
     const btn  = el('shyNoBtn');
     const card = el('q2');
     if (!btn || !card) return;
 
-    // Switch to absolute positioning inside the card
+    // Switch to absolute so it can move freely inside the card
     btn.style.position = 'absolute';
-    // Start centred at bottom of button row
-    btn.style.left = '55%';
-    btn.style.top  = '72%';
-    btn.style.transform = 'none';
+    btn.style.top      = '14px';   // stays near the top
+    btn.style.left     = '10px';
+    btn.style.right    = 'auto';
+    btn.style.margin   = '0';
+    btn.style.zIndex   = '10';
+
+    shyX  = 10;
+    shyVX = 0.5; // pixels per frame — slow drift
+
+    function drift() {
+      const cardW = card.offsetWidth  || 300;
+      const btnW  = btn.offsetWidth   || 130;
+      const margin = 10;
+      const maxX   = cardW - btnW - margin;
+
+      shyX += shyVX;
+
+      // Bounce at edges
+      if (shyX >= maxX) { shyX = maxX; shyVX = -Math.abs(shyVX); }
+      if (shyX <= margin) { shyX = margin; shyVX =  Math.abs(shyVX); }
+
+      btn.style.left = shyX + 'px';
+      shyRAF = requestAnimationFrame(drift);
+    }
+
+    // Cancel any previous RAF
+    if (shyRAF) cancelAnimationFrame(shyRAF);
+    shyRAF = requestAnimationFrame(drift);
   }
 
   function shyMove(btn, event) {
+    // On click/touch — burst away horizontally, stay at top
     const card = el('q2');
     if (!card) return;
 
     const cRect = card.getBoundingClientRect();
-    const bRect = btn.getBoundingClientRect();
-
-    // Pointer position relative to card
-    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+    const clientX = event.touches ? event.touches[0].clientX : (event.clientX || cRect.left + cRect.width/2);
     const px = clientX - cRect.left;
-    const py = clientY - cRect.top;
+    const btnCentreX = shyX + (btn.offsetWidth / 2);
 
-    // Button centre relative to card
-    const bx = bRect.left - cRect.left + bRect.width  / 2;
-    const by = bRect.top  - cRect.top  + bRect.height / 2;
+    // Slide away from cursor — but keep drifting after
+    const dx = btnCentreX - px;
+    const burst = dx > 0 ? 60 : -60;
 
-    // Direction AWAY from cursor
-    const dx = bx - px;
-    const dy = by - py;
-    const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+    const cardW = card.offsetWidth  || 300;
+    const btnW  = btn.offsetWidth   || 130;
+    const margin = 10;
 
-    // The closer the cursor, the faster it runs
-    const proximity = Math.max(0, 180 - dist);
-    const speed = 60 + proximity * 0.8;
-
-    let nx = (dx / dist) * speed;
-    let ny = (dy / dist) * speed;
-
-    // New position (button top-left relative to card)
-    let newL = (bRect.left - cRect.left) + nx;
-    let newT = (bRect.top  - cRect.top)  + ny;
-
-    // Clamp strictly inside card — no going below the card
-    const margin = 8;
-    const maxL = cRect.width  - bRect.width  - margin;
-    const maxT = cRect.height - bRect.height - margin;
-    newL = Math.max(margin, Math.min(newL, maxL));
-    newT = Math.max(margin, Math.min(newT, maxT));
-
-    btn.style.left = newL + 'px';
-    btn.style.top  = newT + 'px';
+    shyX = Math.max(margin, Math.min(shyX + burst, cardW - btnW - margin));
+    // Reverse drift direction toward the burst direction
+    shyVX = burst > 0 ? Math.abs(shyVX) : -Math.abs(shyVX);
+    btn.style.left = shyX + 'px';
   }
 
   /* Create a NO button that continuously bounces around the viewport */
@@ -615,13 +623,13 @@ const App = (() => {
   /* ── DOM READY ── */
   document.addEventListener("DOMContentLoaded",()=>{
     // ── Splash → Login transition ──
-    // Splash fades at 0.9s — show login at 1.1s
+    // Splash fades at 1.8s — show login at 2.1s
     setTimeout(() => {
       const ls = el("loginScreen");
       if (ls) ls.classList.add("visible");
       const sp = el("splash");
       if (sp) setTimeout(() => sp.remove(), 300);
-    }, 1100);
+    }, 2100);
 
     const saved=Session.load();
     if(saved&&USERS[saved]){

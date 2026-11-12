@@ -9,7 +9,10 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="favicon.png">
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Preconnect speeds up Google Fonts fetch -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z4F89D35GQ"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-Z4F89D35GQ');</script>
@@ -19,9 +22,12 @@
 <!-- LOGIN -->
 <div id="loginScreen" class="login-screen">
   <div class="login-card">
-    <div class="login-logo">❤️</div>
+    <div class="login-logo">
+      <span class="pulse-heart">❤️</span>
+    </div>
     <h1 class="login-title">Eva ❤️ Alovea</h1>
-    <p class="login-subtitle">A private love story 💕</p>
+    <p class="login-subtitle">Our private love story 💕</p>
+    <p class="login-quote">"You are my today and all of my tomorrows."</p>
     <div id="loginError" class="form-error"></div>
     <input type="text" id="loginUser" placeholder="Username" autocomplete="username" spellcheck="false">
     <div class="password-wrap">
@@ -82,13 +88,17 @@
         Now and forever 💕
       </p>
       <p id="counter"></p>
-      <button onclick="App.showPopup()">Click Me 💌</button>
+      <div class="love-actions">
+        <button onclick="App.showPopup()">Click Me 💌</button>
+        <button class="btn-ghost" onclick="App.go('story')">Our Story 📖</button>
+      </div>
     </div>
   </section>
 
   <!-- STORY -->
   <section id="story" style="display:none;">
     <h2>Our Story ❤️</h2>
+    <p class="section-intro">Every great love story has a beginning. This is ours.</p>
     <div class="story-timeline">
       <div class="story-point"><h3>First Meeting 🌸</h3><p>The day we met, I knew my life had changed forever. Your smile stole my heart.</p></div>
       <div class="story-point"><h3>First Date 🌅</h3><p>Walking together, holding hands, laughing under the sunset — pure magic.</p></div>
@@ -252,16 +262,18 @@
 <!-- POPUP -->
 <div id="popup" class="backdrop" style="display:none;" role="dialog" aria-modal="true">
   <div class="popup-inner">
-    <p>Alovea 💓 ❤️<br>You are my everything.<br>I love you forever 💕</p>
+    <div class="popup-hearts">❤️ 💕 ❤️</div>
+    <h3 class="popup-title">My Dearest Eva</h3>
+    <p>In a world full of people,<br>my eyes will always search for you.<br><br>You are not just my girlfriend —<br>you are my home, my peace,<br>my favourite place to be.<br><br>I love you more than words<br>could ever say. 💕</p>
     <button onclick="App.closePopup()">Close 💌</button>
   </div>
 </div>
 
-<!-- Firebase DB + Storage only (no Firebase Auth) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-<script src="script.js"></script>
+<!-- Firebase DB + Storage only (no Firebase Auth) — deferred so page renders first -->
+<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script defer src="script.js"></script>
 </body>
 </html>

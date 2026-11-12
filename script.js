@@ -203,7 +203,22 @@ const App = (() => {
   function closePopup(){ const p=el("popup");if(p) p.style.display="none"; }
 
   /* ── HEARTS ── */
-  function startH(){ if(hTmr) return; hTmr=setInterval(()=>{ if(!heartsOn) return; const h=document.createElement("div"); h.className="heart";h.textContent="❤️";h.setAttribute("aria-hidden","true");h.style.left=Math.random()*100+"vw";h.style.fontSize=(13+Math.random()*20)+"px"; document.body.appendChild(h);setTimeout(()=>h.remove(),6000); },700); }
+  function startH(){
+    if(hTmr) return;
+    // 1400ms interval (was 700) + max 8 hearts at once — halves DOM work
+    hTmr=setInterval(()=>{
+      if(!heartsOn) return;
+      if(document.querySelectorAll(".heart").length >= 8) return; // cap
+      const h=document.createElement("div");
+      h.className="heart"; h.textContent=["❤️","💕","🌹","💗"][Math.floor(Math.random()*4)];
+      h.setAttribute("aria-hidden","true");
+      h.style.left=Math.random()*100+"vw";
+      h.style.fontSize=(12+Math.random()*18)+"px";
+      h.style.willChange="transform"; // GPU layer while animating
+      document.body.appendChild(h);
+      setTimeout(()=>{ h.style.willChange="auto"; h.remove(); },7000);
+    },1400);
+  }
   function stopH(){ clearInterval(hTmr);hTmr=null;document.querySelectorAll(".heart").forEach(h=>h.remove()); }
 
   /* ── RATING ── */

@@ -442,12 +442,71 @@ const App = (() => {
 
       // Q2 gets the bouncing NO button
       if (step + 1 === 1) spawnBouncingNo();
+      // Q3 gets the shy NO button (cursor-triggered, stays in card)
+      if (step + 1 === 2) setTimeout(initShyBtn, 50);
     }
   }
 
+  /* ── SHY BUTTON for Q3: runs from cursor, stays inside card ── */
+  function initShyBtn() {
+    const btn  = el('shyNoBtn');
+    const card = el('q2');
+    if (!btn || !card) return;
+
+    // Switch to absolute positioning inside the card
+    btn.style.position = 'absolute';
+    // Start centred at bottom of button row
+    btn.style.left = '55%';
+    btn.style.top  = '72%';
+    btn.style.transform = 'none';
+  }
+
+  function shyMove(btn, event) {
+    const card = el('q2');
+    if (!card) return;
+
+    const cRect = card.getBoundingClientRect();
+    const bRect = btn.getBoundingClientRect();
+
+    // Pointer position relative to card
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+    const px = clientX - cRect.left;
+    const py = clientY - cRect.top;
+
+    // Button centre relative to card
+    const bx = bRect.left - cRect.left + bRect.width  / 2;
+    const by = bRect.top  - cRect.top  + bRect.height / 2;
+
+    // Direction AWAY from cursor
+    const dx = bx - px;
+    const dy = by - py;
+    const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+
+    // The closer the cursor, the faster it runs
+    const proximity = Math.max(0, 180 - dist);
+    const speed = 60 + proximity * 0.8;
+
+    let nx = (dx / dist) * speed;
+    let ny = (dy / dist) * speed;
+
+    // New position (button top-left relative to card)
+    let newL = (bRect.left - cRect.left) + nx;
+    let newT = (bRect.top  - cRect.top)  + ny;
+
+    // Clamp strictly inside card — no going below the card
+    const margin = 8;
+    const maxL = cRect.width  - bRect.width  - margin;
+    const maxT = cRect.height - bRect.height - margin;
+    newL = Math.max(margin, Math.min(newL, maxL));
+    newT = Math.max(margin, Math.min(newT, maxT));
+
+    btn.style.left = newL + 'px';
+    btn.style.top  = newT + 'px';
+  }
+
   /* Create a NO button that continuously bounces around the viewport */
-  function spawnBouncingNo() {
-    if (bouncingBtn) return;
+  function spawnBouncingNo() {    if (bouncingBtn) return;
 
     const btn = document.createElement('button');
     btn.className   = 'q-no-bounce';
@@ -556,14 +615,13 @@ const App = (() => {
   /* ── DOM READY ── */
   document.addEventListener("DOMContentLoaded",()=>{
     // ── Splash → Login transition ──
-    // Splash CSS animation fades out at 2.4s; we show login at 2.5s
+    // Splash fades at 0.9s — show login at 1.1s
     setTimeout(() => {
       const ls = el("loginScreen");
       if (ls) ls.classList.add("visible");
-      // remove splash from DOM after it's fully gone (keeps accessibility clean)
       const sp = el("splash");
-      if (sp) setTimeout(() => sp.remove(), 400);
-    }, 2500);
+      if (sp) setTimeout(() => sp.remove(), 300);
+    }, 1100);
 
     const saved=Session.load();
     if(saved&&USERS[saved]){
@@ -582,5 +640,5 @@ const App = (() => {
     const lb=el("lightbox"); if(lb){ let sx=0; lb.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;},{passive:true}); lb.addEventListener("touchend",e=>{const dx=sx-e.changedTouches[0].clientX;if(dx>50)nextImg();if(dx<-50)prevImg();},{passive:true}); }
   });
 
-  return { login,logout,togglePass, go,toggleMusic,showPopup,closePopup,rate, openLightbox,closeLightbox,nextImg,prevImg, headerTap,openProfile,closeProfile,changePhoto, sendMsg, openAdmin,closeAdmin,adminTab,clearMsgs,setSetting, qAnswer,runAway,confirmDate, setMood };
+  return { login,logout,togglePass, go,toggleMusic,showPopup,closePopup,rate, openLightbox,closeLightbox,nextImg,prevImg, headerTap,openProfile,closeProfile,changePhoto, sendMsg, openAdmin,closeAdmin,adminTab,clearMsgs,setSetting, qAnswer,shyMove,runAway,confirmDate, setMood };
 })();

@@ -195,37 +195,82 @@
     </div>
   </div>
 
-  <!-- GAME + CHAT -->
+  <!-- LOVE QUESTIONS GAME + CHAT -->
   <section id="game" style="display:none;">
-    <h2>💘 Our Love Game 💘</h2>
 
-    <div id="level1" class="game-level">
-      <h3>Level 1 — Find My Heart ❤️</h3>
-      <div class="game-grid g3">
-        <div class="box" onclick="App.checkHeart(this)">❤️</div>
-        <div class="box" onclick="App.checkHeart(this)">❤️</div>
-        <div class="box" onclick="App.checkHeart(this)">❤️</div>
-        <div class="box" onclick="App.checkHeart(this)">❤️</div>
-        <div class="box" onclick="App.checkHeart(this)">❤️</div>
-        <div class="box" onclick="App.checkHeart(this)">❤️</div>
+    <!-- ══ LOVE QUESTIONS GAME ══ -->
+    <div id="loveGame">
+      <h2>💘 A Question For You</h2>
+      <p class="section-intro">Only your heart can answer these…</p>
+
+      <!-- Progress dots -->
+      <div class="q-progress">
+        <span class="q-dot active" id="dot0"></span>
+        <span class="q-dot" id="dot1"></span>
+        <span class="q-dot" id="dot2"></span>
       </div>
-    </div>
 
-    <div id="level2" class="game-level" style="display:none;">
-      <h3>Level 2 — How Well Do You Know Us? 💞</h3>
-      <button onclick="App.startQuiz()">Start Quiz 💖</button>
-    </div>
+      <!-- Q1 -->
+      <div class="q-card" id="q0">
+        <div class="q-emoji">💍</div>
+        <p class="q-text">Will you be my girl forever<br>and never leave again?</p>
+        <div class="q-buttons">
+          <button class="q-yes" onclick="App.qAnswer(0)">YES, Always &amp; Forever 💕</button>
+          <button class="q-no runaway" id="noBtn0"
+            onmousemove="App.runAway(this,event)"
+            ontouchmove="App.runAway(this,event)">No… 💔</button>
+        </div>
+        <p class="q-hint">Psst… one of these buttons has a mind of its own 😏</p>
+      </div>
 
-    <div id="level3" class="game-level" style="display:none;">
-      <h3>Level 3 — Match Our Memories 📸</h3>
-      <div class="game-grid g4" id="memoryGrid"></div>
-    </div>
+      <!-- Q2 -->
+      <div class="q-card" id="q1" style="display:none;">
+        <div class="q-emoji">🎓</div>
+        <p class="q-text">Will you attend<br>my graduation? 🎉</p>
+        <div class="q-buttons">
+          <button class="q-yes" onclick="App.qAnswer(1)">I wouldn't miss it! 🎓💕</button>
+          <button class="q-no runaway" id="noBtn1"
+            onmousemove="App.runAway(this,event)"
+            ontouchmove="App.runAway(this,event)">I'll be busy… 😬</button>
+        </div>
+      </div>
 
-    <div id="gameFinal" class="game-level" style="display:none; text-align:center;">
-      <p style="font-size:3rem;">💍</p>
-      <h2 style="-webkit-text-fill-color:#fff;background:none;">You Win My Heart Forever!</h2>
-      <p style="color:var(--muted);">Eva ❤️ you completed my life 💞</p>
-    </div>
+      <!-- Q3 -->
+      <div class="q-card" id="q2" style="display:none;">
+        <div class="q-emoji">🌹</div>
+        <p class="q-text">Will you go on a<br>romantic date with me? �</p>
+        <div class="q-buttons">
+          <button class="q-yes" onclick="App.qAnswer(2)">YES! Let's go! 🌹</button>
+          <button class="q-no frozen" id="noBtn2" disabled>Never �</button>
+        </div>
+        <p class="q-hint">That button seems to be frozen… 🥶</p>
+      </div>
+
+      <!-- DATE PICKER (shown after Q3 yes) -->
+      <div id="datePicker" style="display:none;">
+        <div class="date-celebration">
+          <div class="date-confetti" id="confetti"></div>
+          <p class="date-emoji">🎉�🌹</p>
+          <h3 class="date-title">She said YES!</h3>
+          <p class="date-sub">Now pick our perfect date…</p>
+          <div class="date-form">
+            <input type="date" id="dateInput" class="date-input">
+            <select id="timeInput" class="date-input">
+              <option value="">Choose a time…</option>
+              <option value="Morning (9am - 12pm)">Morning ☀️ (9am – 12pm)</option>
+              <option value="Afternoon (1pm - 5pm)">Afternoon 🌤️ (1pm – 5pm)</option>
+              <option value="Evening (6pm - 9pm)">Evening 🌆 (6pm – 9pm)</option>
+              <option value="Night (after 7pm)">Night 🌙 (after 7pm)</option>
+            </select>
+            <button class="q-yes" onclick="App.confirmDate()" style="width:100%;margin-top:8px;">
+              💌 Send to Alovea
+            </button>
+          </div>
+          <p class="date-note">This will open WhatsApp with your answer �</p>
+        </div>
+      </div>
+
+    </div><!-- end loveGame -->
 
     <!-- CHAT -->
     <div class="chat-wrap" style="position:relative;">

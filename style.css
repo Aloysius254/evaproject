@@ -420,3 +420,230 @@ section h2{font-family:var(--vibes);font-size:clamp(2.2rem,5vw,3.4rem);text-alig
   .mood-widget{font-size:11px;padding:5px 14px;}
   .countdown-boxes{gap:7px;}.cbox{padding:9px 12px;min-width:54px;}.cbox span{font-size:1.3rem;}
 }
+
+/* ═══════════════════════════════════════════
+   LOVE QUESTIONS GAME
+═══════════════════════════════════════════ */
+#loveGame {
+  text-align: center;
+  padding: 30px 20px 10px;
+  max-width: 540px;
+  margin: 0 auto;
+}
+#loveGame h2 { margin-bottom: 4px; }
+
+/* Progress dots */
+.q-progress {
+  display: flex; gap: 10px; justify-content: center;
+  margin: 16px 0 28px;
+}
+.q-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(232,184,75,.25);
+  border: 1px solid rgba(232,184,75,.4);
+  transition: background .3s, transform .3s;
+}
+.q-dot.active {
+  background: var(--gold);
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(232,184,75,.6);
+}
+.q-dot.done {
+  background: var(--red);
+  box-shadow: 0 0 6px rgba(192,57,43,.5);
+}
+
+/* Question card */
+.q-card {
+  background: linear-gradient(135deg, rgba(139,0,0,.12), rgba(184,134,11,.08));
+  border: 1px solid rgba(232,184,75,.2);
+  border-radius: 22px;
+  padding: 36px 28px;
+  animation: fadeUp .4s ease both;
+  position: relative;
+}
+.q-emoji {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+  animation: heartbeat 1.6s ease-in-out infinite;
+  display: block;
+}
+.q-text {
+  font-family: var(--vibes);
+  font-size: clamp(1.5rem, 5vw, 2.2rem);
+  color: #fff;
+  line-height: 1.4;
+  margin-bottom: 28px;
+}
+.q-hint {
+  font-size: 11px;
+  color: rgba(232,184,75,.55);
+  margin-top: 14px;
+  font-style: italic;
+  font-family: var(--sans);
+}
+
+/* Buttons container */
+.q-buttons {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  /* important: needs overflow visible so button can escape */
+  position: relative;
+  min-height: 60px;
+}
+
+/* YES button */
+.q-yes {
+  background: linear-gradient(135deg, var(--red), var(--red-d));
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--sans);
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(192,57,43,.5);
+  transition: transform .2s, box-shadow .2s;
+  margin: 0;
+}
+.q-yes:hover { transform: scale(1.05); box-shadow: 0 7px 24px rgba(192,57,43,.7); }
+
+/* NO button — runaway version */
+.q-no.runaway {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.15);
+  color: rgba(255,255,255,.5);
+  border-radius: 50px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--sans);
+  cursor: not-allowed;
+  margin: 0;
+  box-shadow: none;
+  /* position absolute so it can escape the flow */
+  position: absolute;
+  transition: left .08s ease, top .08s ease;
+  right: 0;
+  /* start positioned to the right of YES */
+}
+
+/* NO button — frozen version */
+.q-no.frozen {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  color: rgba(255,255,255,.2);
+  border-radius: 50px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--sans);
+  cursor: not-allowed;
+  margin: 0;
+  box-shadow: none;
+  opacity: .4;
+  filter: grayscale(1);
+  animation: frozenShiver 3s ease infinite;
+}
+@keyframes frozenShiver {
+  0%,100% { transform: none; }
+  92%  { transform: none; }
+  93%  { transform: translateX(-2px); }
+  94%  { transform: translateX(2px); }
+  95%  { transform: translateX(-2px); }
+  96%  { transform: translateX(0); }
+}
+
+/* ══ DATE PICKER PAGE ══ */
+#datePicker { animation: fadeUp .5s ease both; }
+
+.date-celebration {
+  position: relative;
+  background: linear-gradient(160deg, rgba(139,0,0,.18), rgba(184,134,11,.1));
+  border: 1px solid rgba(232,184,75,.25);
+  border-radius: 24px;
+  padding: 40px 28px;
+  overflow: hidden;
+}
+
+.date-confetti {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  animation: confettiFall var(--dur, 2s) var(--delay, 0s) linear forwards;
+  opacity: 0;
+}
+@keyframes confettiFall {
+  0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
+}
+
+.date-emoji {
+  font-size: 2.4rem;
+  margin-bottom: 10px;
+  position: relative; z-index: 1;
+  animation: heartbeat 1.2s ease-in-out infinite;
+}
+.date-title {
+  font-family: var(--vibes);
+  font-size: clamp(2rem, 6vw, 3rem);
+  background: linear-gradient(135deg, var(--gold-l), var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+  position: relative; z-index: 1;
+}
+.date-sub {
+  font-family: var(--font);
+  font-size: 1rem;
+  color: rgba(255,255,255,.75);
+  font-style: italic;
+  margin-bottom: 24px;
+  position: relative; z-index: 1;
+}
+
+.date-form {
+  display: flex; flex-direction: column; gap: 12px;
+  max-width: 320px; margin: 0 auto;
+  position: relative; z-index: 1;
+}
+.date-input {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(232,184,75,.3);
+  background: rgba(255,255,255,.07);
+  color: #fff;
+  font-size: 15px;
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color .2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.date-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(232,184,75,.12); }
+.date-input option { background: #1a0000; color: #fff; }
+
+.date-note {
+  font-size: 11px;
+  color: rgba(232,184,75,.5);
+  font-style: italic;
+  font-family: var(--sans);
+  margin-top: 10px;
+  position: relative; z-index: 1;
+}
+
+/* Mobile adjustments */
+@media (max-width: 540px) {
+  .q-card { padding: 28px 18px; }
+  .q-buttons { min-height: 110px; flex-direction: column; align-items: center; }
+  .q-no.runaway { position: absolute; }
+}

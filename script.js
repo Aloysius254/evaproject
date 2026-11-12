@@ -404,14 +404,116 @@ const App = (() => {
   function loadMsgCnt(){ const s=el("adminMsgCount");if(!s) return; db.ref("messages").once("value").then(sn=>{s.textContent="📨 Total: "+sn.numChildren();}).catch(()=>{s.textContent="Check Firebase rules.";}); }
   function clearMsgs(){ if(!isAdmin||!confirm("Delete ALL messages?")) return; db.ref("messages").remove().then(()=>{alert("Cleared ✔");loadMsgCnt();}).catch(e=>alert(e.message)); }
 
-  /* ── GAME ── */
-  function checkHeart(box){ const boxes=Array.from(document.querySelectorAll("#level1 .box")); if(boxes.indexOf(box)===lucky){box.textContent="💖";setTimeout(()=>{alert("You found my heart ❤️");el("level1").style.display="none";el("level2").style.display="block";},200);}else{box.textContent="💔";box.style.pointerEvents="none";} }
-  function startQuiz(){ const a=prompt("Where did we first meet?"); if(a&&a.trim().toLowerCase()==="school"){alert("Correct ❤️");el("level2").style.display="none";el("level3").style.display="block";buildMemory();}else{alert("Try again 💕");} }
+  /* ── LOVE QUESTIONS GAME ── */
+  let qStep = 0;
 
-  let flipped=[],matched=0,lock=false;
-  function buildMemory(){ const g=el("memoryGrid");if(!g) return; const sh=[...PAIRS].sort(()=>Math.random()-0.5); g.innerHTML="";matched=0;flipped=[];lock=false; sh.forEach(e=>{const b=document.createElement("div");b.className="box";b.dataset.v=e;b.textContent="💌";b.setAttribute("role","button");b.setAttribute("tabindex","0");b.addEventListener("click",()=>flip(b));b.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" ")flip(b);});g.appendChild(b);}); }
-  function flip(b){ if(lock||b.classList.contains("matched")||flipped.includes(b)) return; b.textContent=b.dataset.v;flipped.push(b); if(flipped.length===2){lock=true; if(flipped[0].dataset.v===flipped[1].dataset.v){flipped.forEach(c=>c.classList.add("matched"));matched++;flipped=[];lock=false;if(matched===PAIRS.length/2){setTimeout(()=>{el("level3").style.display="none";el("gameFinal").style.display="block";},500);}}else{setTimeout(()=>{flipped.forEach(c=>c.textContent="💌");flipped=[];lock=false;},900);}}}
+  function qAnswer(step) {
+    // Mark dot done, activate next
+    const dot = el("dot" + step);
+    if (dot) { dot.classList.remove("active"); dot.classList.add("done"); }
 
+    if (step === 2) {
+      // Q3 answered YES — show date picker
+      el("q2").style.display = "none";
+      el("datePicker").style.display = "block";
+      spawnConfetti();
+      return;
+    }
+
+    // Move to next question
+    el("q" + step).style.display = "none";
+    const next = el("q" + (step + 1));
+    if (next) {
+      next.style.display = "block";
+      const nextDot = el("dot" + (step + 1));
+      if (nextDot) nextDot.classList.add("active");
+    }
+  }
+
+  /* Runaway button — moves away from cursor/touch */
+  function runAway(btn, event) {
+    const rect = btn.getBoundingClientRect();
+    const parent = btn.closest(".q-card") || document.body;
+    const pRect = parent.getBoundingClientRect();
+
+    // Get pointer position relative to button center
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+    const bx = rect.left + rect.width / 2;
+    const by = rect.top  + rect.height / 2;
+
+    // Direction away from cursor
+    const dx = bx - clientX;
+    const dy = by - clientY;
+    const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+    const nx = dx / dist;
+    const ny = dy / dist;
+    const speed = 80;
+
+    // Current position (relative to parent)
+    const curL = rect.left - pRect.left;
+    const curT = rect.top  - pRect.top;
+
+    let newL = curL + nx * speed;
+    let newT = curT + ny * speed;
+
+    // Clamp within parent bounds
+    const maxL = pRect.width  - rect.width  - 10;
+    const maxT = pRect.height - rect.height - 10;
+    newL = Math.max(10, Math.min(newL, maxL));
+    newT = Math.max(10, Math.min(newT, maxT));
+
+    btn.style.position = "absolute";
+    btn.style.left = newL + "px";
+    btn.style.top  = newT + "px";
+    btn.style.right = "auto";
+  }
+
+  /* Confetti burst for date picker */
+  function spawnConfetti() {
+    const container = el("confetti");
+    if (!container) return;
+    const colors = ["#e8b84b","#c0392b","#fff","#f5d78e","#ff6b6b","#ffd700"];
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement("div");
+      p.className = "confetti-piece";
+      p.style.cssText = `
+        left: ${Math.random()*100}%;
+        background: ${colors[Math.floor(Math.random()*colors.length)]};
+        --dur: ${1.5 + Math.random()*2}s;
+        --delay: ${Math.random()*1.5}s;
+        width: ${5 + Math.random()*8}px;
+        height: ${5 + Math.random()*8}px;
+        border-radius: ${Math.random()>.5 ? "50%" : "2px"};
+      `;
+      container.appendChild(p);
+    }
+    // Clean up after animation
+    setTimeout(() => { if (container) container.innerHTML = ""; }, 4000);
+  }
+
+  /* Confirm date — open WhatsApp */
+  function confirmDate() {
+    const dateVal = el("dateInput")?.value;
+    const timeVal = el("timeInput")?.value;
+    if (!dateVal) { alert("Please pick a date first 📅"); return; }
+    if (!timeVal) { alert("Please choose a time ⏰"); return; }
+
+    // Format date nicely
+    const d = new Date(dateVal + "T12:00:00");
+    const formatted = d.toLocaleDateString("en-KE", {
+      weekday: "long", year: "numeric", month: "long", day: "numeric"
+    });
+
+    const msg = encodeURIComponent(
+      `💕 YES Alovea! I'll go on a date with you!\n\n` +
+      `📅 Date: ${formatted}\n` +
+      `⏰ Time: ${timeVal}\n\n` +
+      `I can't wait! 🌹❤️`
+    );
+
+    window.open(`https://wa.me/254714782090?text=${msg}`, "_blank");
+  }
   /* ── PWA ── */
   function sw(){ if("serviceWorker"in navigator) navigator.serviceWorker.register("./service-worker.js").catch(()=>{}); }
   function pwaBtn(){ const btn=document.createElement("button");btn.id="installBtn";btn.textContent="📲 Install";btn.setAttribute("aria-label","Install app");document.body.appendChild(btn); if(window.matchMedia("(display-mode: standalone)").matches){btn.style.display="none";return;} window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();pwa=e;}); window.addEventListener("appinstalled",()=>{btn.style.display="none";pwa=null;}); btn.addEventListener("click",()=>{if(pwa){pwa.prompt();pwa.userChoice.then(()=>{pwa=null;btn.style.display="none"});}else{const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);alert(ios?"iPhone: tap Share → Add to Home Screen":"Android: tap ⋮ → Add to Home screen");}}); }
@@ -445,5 +547,5 @@ const App = (() => {
     const lb=el("lightbox"); if(lb){ let sx=0; lb.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;},{passive:true}); lb.addEventListener("touchend",e=>{const dx=sx-e.changedTouches[0].clientX;if(dx>50)nextImg();if(dx<-50)prevImg();},{passive:true}); }
   });
 
-  return { login,logout,togglePass, go,toggleMusic,showPopup,closePopup,rate, openLightbox,closeLightbox,nextImg,prevImg, headerTap,openProfile,closeProfile,changePhoto, sendMsg, openAdmin,closeAdmin,adminTab,clearMsgs,setSetting, checkHeart,startQuiz, setMood };
+  return { login,logout,togglePass, go,toggleMusic,showPopup,closePopup,rate, openLightbox,closeLightbox,nextImg,prevImg, headerTap,openProfile,closeProfile,changePhoto, sendMsg, openAdmin,closeAdmin,adminTab,clearMsgs,setSetting, qAnswer,runAway,confirmDate, setMood };
 })();

@@ -12,7 +12,7 @@
   <!-- Preconnect speeds up Google Fonts fetch -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Dancing+Script:wght@400;700&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z4F89D35GQ"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-Z4F89D35GQ');</script>
@@ -26,8 +26,9 @@
       <svg class="splash-svg" viewBox="0 0 100 92" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%"   stop-color="#ff4081"/>
-            <stop offset="100%" stop-color="#e91e8c"/>
+            <stop offset="0%"   stop-color="#e8b84b"/>
+            <stop offset="50%"  stop-color="#c0392b"/>
+            <stop offset="100%" stop-color="#8b0000"/>
           </linearGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -82,6 +83,13 @@
   <audio id="bgMusic" loop><source src="music/love.mp3" type="audio/mpeg"></audio>
   <button id="musicBtn" onclick="App.toggleMusic()">🎵 Play Music</button>
 
+  <!-- Mood / status widget — only admin can set it, Eva sees it live -->
+  <div id="moodWidget" class="mood-widget" style="display:none;">
+    <span id="moodDisplay">💭</span>
+    <span id="moodText"></span>
+    <button id="moodBtn" class="mood-set-btn" onclick="App.setMood()" style="display:none;">✏️</button>
+  </div>
+
   <aside id="site-rating">
     <h2>Rate Our Story 💕</h2>
     <p class="rating-text">How beautiful is our love?</p>
@@ -117,6 +125,23 @@
         Now and forever 💕
       </p>
       <p id="counter"></p>
+
+      <!-- Daily love note — changes every day automatically -->
+      <div class="daily-note" id="dailyNote">
+        <span class="daily-label">💛 Today's love note</span>
+        <p id="dailyNoteText"></p>
+      </div>
+
+      <!-- Countdown to next anniversary -->
+      <div class="countdown-wrap">
+        <span class="countdown-label">💍 Next Anniversary</span>
+        <div class="countdown-boxes">
+          <div class="cbox"><span id="cdDays">--</span><small>days</small></div>
+          <div class="cbox"><span id="cdHrs">--</span><small>hrs</small></div>
+          <div class="cbox"><span id="cdMins">--</span><small>min</small></div>
+          <div class="cbox"><span id="cdSecs">--</span><small>sec</small></div>
+        </div>
+      </div>
       <div class="love-actions">
         <button onclick="App.showPopup()">Click Me 💌</button>
         <button class="btn-ghost" onclick="App.go('story')">Our Story 📖</button>

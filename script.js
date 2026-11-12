@@ -111,7 +111,10 @@ const App = (() => {
 
     setOnline(true);
     listenSettings();
+    listenMood();
     startH(); startC();
+    startShootingStars();
+    showDailyNote();
     listenStatus();
     swipe();
     sw(); pwaBtn();
@@ -193,7 +196,109 @@ const App = (() => {
   /* ── COUNTER ── */
   function startC(){ updateC(); cTmr=setInterval(updateC,1000); }
   function stopC(){ clearInterval(cTmr);cTmr=null; }
-  function updateC(){ const c=el("counter"); if(!c) return; const diff=Date.now()-START.getTime(); if(diff<0){c.textContent="Our love story begins soon 💕";return;} const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000); c.textContent=`Loved each other for ${d}d ${h}h ${m}m ${s}s ❤️`; }
+  function updateC(){
+    const c=el("counter"); if(!c) return;
+    const diff=Date.now()-START.getTime();
+    if(diff<0){c.textContent="Our love story begins soon 💕";return;}
+    const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
+    c.textContent=`Loved each other for ${d}d ${h}h ${m}m ${s}s ❤️`;
+    updateCountdown();
+  }
+
+  /* ── COUNTDOWN to next anniversary ── */
+  function updateCountdown(){
+    const now=new Date();
+    // Next June 13
+    let next=new Date(now.getFullYear(),5,13); // June = month 5
+    if(now>=next) next=new Date(now.getFullYear()+1,5,13);
+    const diff=next-now;
+    if(diff<0) return;
+    const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
+    const f=(n,id)=>{ const e=el(id); if(e) e.textContent=String(n).padStart(2,"0"); };
+    f(d,"cdDays"); f(h,"cdHrs"); f(m,"cdMins"); f(s,"cdSecs");
+  }
+
+  /* ── DAILY LOVE NOTE ── */
+  const NOTES=[
+    "Every morning I wake up grateful that you chose me. 💛",
+    "You make ordinary days feel like fairy tales. 🌹",
+    "I fall in love with you a little more every single day. ❤️",
+    "With you, every moment is my favourite moment. ✨",
+    "You are the chapter in my life I never want to end. 📖",
+    "My heart only knows one direction — towards you. 💕",
+    "Thank you for being my safe place in this world. 🏡",
+    "You are the most beautiful thing that ever happened to me. 🌸",
+    "I would choose you in a hundred lifetimes. 💫",
+    "Your smile is my favourite thing to wake up to. ☀️",
+    "You are my home, my peace, my everything. 🌙",
+    "With you beside me, I need nothing else. 💖",
+    "Every love song makes sense now that I have you. 🎵",
+    "You have no idea how often I think about you. 💭",
+    "Thank you for loving me exactly as I am. 🌿",
+    "My life is richer, warmer, and fuller because of you. 🔥",
+    "I love the way you make me laugh like no one else can. 😄",
+    "You are the best thing I never saw coming. 💫",
+    "With you, I am home. 🏡",
+    "Every day is a gift when I spend it with you. 🎁",
+    "You are my answered prayer. 🙏",
+    "In all the world, there is no heart more open to me than yours. 💞",
+    "You make love feel like the easiest thing in the world. 🌈",
+    "I never knew what I was missing until I found you. 💛",
+    "My greatest adventure is loving you. 🗺️",
+    "You are the reason behind my smile every day. 😊",
+    "I love you more than yesterday, less than tomorrow. 💝",
+    "You are my sun on cloudy days. ☀️",
+    "Thank you for being my person. 🌟",
+    "You are the best love story I have ever lived. 💍",
+    "My love for you grows deeper with every heartbeat. 💓",
+  ];
+  function showDailyNote(){
+    const noteEl=el("dailyNoteText"); if(!noteEl) return;
+    const day=new Date().getDate()-1; // 0–30
+    noteEl.textContent=NOTES[day%NOTES.length];
+  }
+
+  /* ── MOOD / STATUS ── */
+  function listenMood(){
+    track(db.ref("mood"),"value",s=>{
+      const data=s.val()||{};
+      const disp=el("moodDisplay"), txt=el("moodText"), w=el("moodWidget");
+      if(w) w.style.display="flex";
+      if(disp) disp.textContent=data.emoji||"💭";
+      if(txt)  txt.textContent=data.text||"thinking of you…";
+    });
+    // Only admin sees edit button
+    if(isAdmin){ const b=el("moodBtn"); if(b) b.style.display="inline-flex"; }
+  }
+  function setMood(){
+    if(!isAdmin) return;
+    const emojis=["💭","😍","🥰","💕","🌹","✨","😊","🔥","💫","🎵"];
+    const emoji=emojis[Math.floor(Math.random()*emojis.length)];
+    const text=prompt("Set your mood message for Eva:");
+    if(text===null||text.trim()==="") return;
+    db.ref("mood").set({emoji,text:text.trim()}).catch(()=>{});
+  }
+
+  /* ── SHOOTING STARS ── */
+  function startShootingStars(){
+    setInterval(()=>{
+      const s=document.createElement("div");
+      s.className="star";
+      const angle=35+Math.random()*20; // degrees
+      const dist=200+Math.random()*300;
+      s.style.cssText=`
+        left:${Math.random()*100}vw;
+        top:${Math.random()*40}vh;
+        --angle:${angle}deg;
+        --tx:${Math.cos(angle*Math.PI/180)*dist}px;
+        --ty:${Math.sin(angle*Math.PI/180)*dist}px;
+        --dur:${1.2+Math.random()*.8}s;
+        --delay:0s;
+      `;
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(),2200);
+    },3000);
+  }
 
   /* ── MUSIC ── */
   function toggleMusic(){ const m=el("bgMusic"),b=el("musicBtn"); if(!m||!b) return; if(m.paused){m.play().catch(()=>{});b.textContent="🎵 Pause Music";}else{m.pause();b.textContent="🎵 Play Music";} }
@@ -340,5 +445,5 @@ const App = (() => {
     const lb=el("lightbox"); if(lb){ let sx=0; lb.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;},{passive:true}); lb.addEventListener("touchend",e=>{const dx=sx-e.changedTouches[0].clientX;if(dx>50)nextImg();if(dx<-50)prevImg();},{passive:true}); }
   });
 
-  return { login,logout,togglePass, go,toggleMusic,showPopup,closePopup,rate, openLightbox,closeLightbox,nextImg,prevImg, headerTap,openProfile,closeProfile,changePhoto, sendMsg, openAdmin,closeAdmin,adminTab,clearMsgs,setSetting, checkHeart,startQuiz };
+  return { login,logout,togglePass, go,toggleMusic,showPopup,closePopup,rate, openLightbox,closeLightbox,nextImg,prevImg, headerTap,openProfile,closeProfile,changePhoto, sendMsg, openAdmin,closeAdmin,adminTab,clearMsgs,setSetting, checkHeart,startQuiz, setMood };
 })();

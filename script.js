@@ -60,127 +60,171 @@ const App = (() => {
 
   /* ── LOGIN ── */
 
-  /* ── BIOMETRIC (WebAuthn) ──────────────────────────────────
-     How it works:
-     1. User logs in with password first time
-     2. "Save Fingerprint" button appears — tapping registers a
-        credential tied to their username on THIS device
-     3. Next visit: "Use Fingerprint" button shown — one tap
-        verifies biometric and logs them in
-     Credentials are stored ONLY on the device — never sent anywhere.
-  ───────────────────────────────────────────────────────────── */
+  /* ── BIOMETRIC (WebAuthn) ── */
+  const BIO_KEY     = "aloeva_bio_user";
+  const BIO_CRED    = "aloeva_cred_id";
 
-  const BIO_KEY = "aloeva_bio_user"; // localStorage key for registered username
-
-  function bioSupported() {
-    return !!(window.PublicKeyCredential &&
-              navigator.credentials &&
-              window.location.protocol === "https:");
+  /* Returns true only on HTTPS with platform authenticator available */
+  async function bioSupported() {
+    if (!window.PublicKeyCredential) return false;
+    if (window.location.protocol !== "https:") return false;
+    try {
+      const available = await PublicKeyCredential
+        .isUserVerifyingPlatformAuthenticatorAvailable();
+      return !!available;
+    } catch { return false; }
   }
 
-  function checkBioOnLoad() {
-    const registeredUser = localStorage.getItem(BIO_KEY);
-    if (!registeredUser || !bioSupported()) return;
-    // Show biometric button, pre-fill username
+  /* Called on page load — show fingerprint button if credential registered */
+  async function checkBioOnLoad() {
+    const reg = localStorage.getItem(BIO_KEY);
+    if (!reg) return;
+    const supported = await bioSupported();
+    if (!supported) return;
     const sec = el("biometricSection");
     if (sec) sec.style.display = "block";
+    // Pre-fill username field
     const ui = el("loginUser");
-    if (ui) ui.value = registeredUser === "mr aloeva" ? "Mr Aloeva" : "Mrs Aloeva";
+    if (ui) ui.value = reg === "mr aloeva" ? "Mr Aloeva" : "Mrs Aloeva";
   }
 
+  /* Step 1 — register fingerprint after first password login */
   async function registerBiometric() {
-    if (!bioSupported()) {
-      err("Biometric not supported on this device/browser.");
+    const supported = await bioSupported();
+    if (!supported) {
+      err("❌ Fingerprint not supported on this device or browser.");
       return;
     }
-    if (!WHO) return;
+    if (!WHO || !ME) { err("Please log in first."); return; }
 
     const btn = el("registerBioBtn");
-    if (btn) btn.textContent = "Registering…";
+    if (btn) { btn.disabled = true; btn.textContent = "⏳ Registering…"; }
 
     try {
-      // Create a credential tied to this username
       const challenge = crypto.getRandomValues(new Uint8Array(32));
-      const userId    = new TextEncoder().encode(WHO);
+      // userId must be max 64 bytes
+      const userId = new TextEncoder().encode(WHO.substring(0, 64));
 
-      const credential = await navigator.credentials.create({
+      const cred = await navigator.credentials.create({
         publicKey: {
           challenge,
-          rp: { name: "Eva & Alovea", id: location.hostname },
-          user: { id: userId, name: WHO, displayName: ME.display },
+          rp: {
+            name: "Eva & Alovea",
+            id: location.hostname
+          },
+          user: {
+            id: userId,
+            name: WHO,
+            displayName: ME.display
+          },
           pubKeyCredParams: [
-            { type: "public-key", alg: -7  },  // ES256
-            { type: "public-key", alg: -257 }  // RS256
+            { type: "public-key", alg: -7   }, // ES256  (Android)
+            { type: "public-key", alg: -257  }  // RS256  (iOS)
           ],
           authenticatorSelection: {
-            authenticatorAttachment: "platform", // device biometric only
+            authenticatorAttachment: "platform",
+            requireResidentKey: false,
             userVerification: "required"
           },
-          timeout: 60000
+          timeout: 60000,
+          attestation: "none"
         }
       });
 
-      // Save credential ID + username so we can verify next time
-      const credId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
-      localStorage.setItem(BIO_KEY, WHO);
-      localStorage.setItem("aloeva_cred_id", credId);
+      if (!cred) throw new Error("No credential returned");
 
-      if (btn) btn.style.display = "none";
-      err("✅ Fingerprint saved! Use it next time you log in.");
-      // Show bio button for next session awareness
+      // Store credential ID as base64 string
+      const idBytes = new Uint8Array(cred.rawId);
+      const idB64   = btoa(String.fromCharCode(...idBytes));
+      localStorage.setItem(BIO_KEY,  WHO);
+      localStorage.setItem(BIO_CRED, idB64);
+
+      if (btn) { btn.style.display = "none"; }
+      // Show the fingerprint button section so they know it's ready
       const sec = el("biometricSection");
       if (sec) sec.style.display = "block";
+      err("✅ Fingerprint saved! Next time just tap the fingerprint button.");
 
-    } catch (e) {
-      if (btn) btn.textContent = "🔐 Save Fingerprint for next time";
+    } catch(e) {
+      console.error("WebAuthn register error:", e);
+      if (btn) { btn.disabled = false; btn.textContent = "🔐 Save Fingerprint for next time"; }
       if (e.name === "NotAllowedError") {
-        err("Biometric cancelled. You can try again.");
+        err("❌ Fingerprint cancelled. Tap the button and try again.");
+      } else if (e.name === "InvalidStateError") {
+        err("⚠️ Fingerprint already registered on this device.");
+        // Still mark as registered
+        localStorage.setItem(BIO_KEY, WHO);
       } else {
-        err("Could not save fingerprint: " + e.message);
+        err("❌ Could not register fingerprint: " + e.message);
       }
     }
   }
 
+  /* Step 2 — verify fingerprint on subsequent logins */
   async function biometricLogin() {
-    if (!bioSupported()) { err("Biometric not supported."); return; }
+    const supported = await bioSupported();
+    if (!supported) {
+      err("❌ Fingerprint/Face ID not available on this device.");
+      return;
+    }
 
     const registeredUser = localStorage.getItem(BIO_KEY);
-    if (!registeredUser) { err("No fingerprint registered. Please login with password first."); return; }
+    if (!registeredUser) {
+      err("No fingerprint registered yet. Login with password first.");
+      return;
+    }
 
     const btn = el("bioBtn");
-    if (btn) {
-      btn.style.pointerEvents = "none";
-      btn.querySelector(".bio-text").textContent = "Verifying…";
-    }
+    const bioText = btn ? btn.querySelector(".bio-text") : null;
+    if (btn)     btn.style.pointerEvents = "none";
+    if (bioText) bioText.textContent = "⏳ Verifying…";
 
     try {
       const challenge = crypto.getRandomValues(new Uint8Array(32));
+
+      // Build allowCredentials list from stored credential id
+      const credB64 = localStorage.getItem(BIO_CRED);
+      const allowCreds = [];
+      if (credB64) {
+        const idBytes = Uint8Array.from(atob(credB64), c => c.charCodeAt(0));
+        allowCreds.push({
+          type: "public-key",
+          id: idBytes,
+          transports: ["internal"]
+        });
+      }
 
       const assertion = await navigator.credentials.get({
         publicKey: {
           challenge,
           rpId: location.hostname,
+          allowCredentials: allowCreds,
           userVerification: "required",
           timeout: 60000
         }
       });
 
-      // Verification passed (device confirmed biometric) — log in
       if (assertion) {
+        // Biometric verified — boot straight in
         err("");
         Session.save(registeredUser);
+        // Hide login screen immediately
+        el("loginScreen").style.opacity = "0";
+        el("loginScreen").style.pointerEvents = "none";
         boot(registeredUser);
       }
 
-    } catch (e) {
-      if (btn) {
-        btn.style.pointerEvents = "";
-        btn.querySelector(".bio-text").textContent = "Use Fingerprint / Face ID";
-      }
+    } catch(e) {
+      console.error("WebAuthn get error:", e);
+      if (btn)     btn.style.pointerEvents = "";
+      if (bioText) bioText.textContent = "Use Fingerprint / Face ID";
+
       if (e.name === "NotAllowedError") {
-        err("Biometric cancelled or timed out.");
+        err("❌ Fingerprint cancelled or timed out. Try again.");
+      } else if (e.name === "InvalidStateError") {
+        err("⚠️ Credential error. Please login with password.");
       } else {
-        err("Biometric failed. Please use your password.");
+        err("❌ Biometric failed: " + e.message);
       }
     }
   }
@@ -194,11 +238,13 @@ const App = (() => {
     if (!user){ err("Unknown username. Use: Mr Aloeva or Mrs Aloeva"); return; }
     if (CryptoJS.SHA256(p).toString() !== user.hash){ err("Wrong password."); return; }
     Session.save(u);
-    // Show "Save fingerprint" button if biometric supported and not yet registered
-    if (bioSupported() && localStorage.getItem(BIO_KEY) !== u) {
-      const rb = el("registerBioBtn");
-      if (rb) rb.style.display = "flex";
-    }
+    // Show "Save fingerprint" button if credential not yet registered
+    bioSupported().then(supported => {
+      if (supported && localStorage.getItem(BIO_KEY) !== u) {
+        const rb = el("registerBioBtn");
+        if (rb) rb.style.display = "flex";
+      }
+    });
     boot(u);
   }
 
@@ -754,7 +800,7 @@ const App = (() => {
   /* ── DOM READY ── */
   document.addEventListener("DOMContentLoaded",()=>{
     // Check if biometric is registered for this device
-    checkBioOnLoad();
+    checkBioOnLoad(); // async, runs in background
     // ── Splash → Login transition ──
     // Splash fades at 1.8s — show login at 2.1s
     setTimeout(() => {

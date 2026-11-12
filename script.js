@@ -405,115 +405,150 @@ const App = (() => {
   function clearMsgs(){ if(!isAdmin||!confirm("Delete ALL messages?")) return; db.ref("messages").remove().then(()=>{alert("Cleared ✔");loadMsgCnt();}).catch(e=>alert(e.message)); }
 
   /* ── LOVE QUESTIONS GAME ── */
-  let qStep = 0;
+  const qAnswers = {};      // stores answers from each question
+  let bouncingBtn = null;   // the roaming NO button for Q2
+  let bounceRAF   = null;   // requestAnimationFrame id
 
-  function qAnswer(step) {
-    // Mark dot done, activate next
-    const dot = el("dot" + step);
-    if (dot) { dot.classList.remove("active"); dot.classList.add("done"); }
+  function qAnswer(step, answer) {
+    // Save answer
+    qAnswers[step] = answer;
+
+    // Kill bouncing button if active
+    if (bouncingBtn) {
+      cancelAnimationFrame(bounceRAF);
+      bouncingBtn.remove();
+      bouncingBtn = null;
+    }
+
+    // Update progress dots
+    const dot = el('dot' + step);
+    if (dot) { dot.classList.remove('active'); dot.classList.add('done'); }
 
     if (step === 2) {
-      // Q3 answered YES — show date picker
-      el("q2").style.display = "none";
-      el("datePicker").style.display = "block";
+      // Final question answered — show date picker
+      el('q2').style.display = 'none';
+      el('datePicker').style.display = 'block';
       spawnConfetti();
       return;
     }
 
     // Move to next question
-    el("q" + step).style.display = "none";
-    const next = el("q" + (step + 1));
+    el('q' + step).style.display = 'none';
+    const next = el('q' + (step + 1));
     if (next) {
-      next.style.display = "block";
-      const nextDot = el("dot" + (step + 1));
-      if (nextDot) nextDot.classList.add("active");
+      next.style.display = 'block';
+      const nd = el('dot' + (step + 1));
+      if (nd) nd.classList.add('active');
+
+      // Q2 gets the bouncing NO button
+      if (step + 1 === 1) spawnBouncingNo();
     }
   }
 
-  /* Runaway button — moves away from cursor/touch */
-  function runAway(btn, event) {
-    const rect = btn.getBoundingClientRect();
-    const parent = btn.closest(".q-card") || document.body;
-    const pRect = parent.getBoundingClientRect();
+  /* Create a NO button that continuously bounces around the viewport */
+  function spawnBouncingNo() {
+    if (bouncingBtn) return;
 
-    // Get pointer position relative to button center
-    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
-    const bx = rect.left + rect.width / 2;
-    const by = rect.top  + rect.height / 2;
+    const btn = document.createElement('button');
+    btn.className   = 'q-no-bounce';
+    btn.textContent = "I'll be busy… 😬";
+    btn.setAttribute('aria-label', 'No button');
 
-    // Direction away from cursor
-    const dx = bx - clientX;
-    const dy = by - clientY;
-    const dist = Math.sqrt(dx*dx + dy*dy) || 1;
-    const nx = dx / dist;
-    const ny = dy / dist;
-    const speed = 80;
+    // Start at a random spot
+    let x = window.innerWidth  * 0.6;
+    let y = window.innerHeight * 0.5;
+    let vx = 3.5 + Math.random() * 2;   // velocity x
+    let vy = 2.5 + Math.random() * 2;   // velocity y
 
-    // Current position (relative to parent)
-    const curL = rect.left - pRect.left;
-    const curT = rect.top  - pRect.top;
+    btn.style.left = x + 'px';
+    btn.style.top  = y + 'px';
+    document.body.appendChild(btn);
+    bouncingBtn = btn;
 
-    let newL = curL + nx * speed;
-    let newT = curT + ny * speed;
-
-    // Clamp within parent bounds
-    const maxL = pRect.width  - rect.width  - 10;
-    const maxT = pRect.height - rect.height - 10;
-    newL = Math.max(10, Math.min(newL, maxL));
-    newT = Math.max(10, Math.min(newT, maxT));
-
-    btn.style.position = "absolute";
-    btn.style.left = newL + "px";
-    btn.style.top  = newT + "px";
-    btn.style.right = "auto";
-  }
-
-  /* Confetti burst for date picker */
-  function spawnConfetti() {
-    const container = el("confetti");
-    if (!container) return;
-    const colors = ["#e8b84b","#c0392b","#fff","#f5d78e","#ff6b6b","#ffd700"];
-    for (let i = 0; i < 60; i++) {
-      const p = document.createElement("div");
-      p.className = "confetti-piece";
-      p.style.cssText = `
-        left: ${Math.random()*100}%;
-        background: ${colors[Math.floor(Math.random()*colors.length)]};
-        --dur: ${1.5 + Math.random()*2}s;
-        --delay: ${Math.random()*1.5}s;
-        width: ${5 + Math.random()*8}px;
-        height: ${5 + Math.random()*8}px;
-        border-radius: ${Math.random()>.5 ? "50%" : "2px"};
-      `;
-      container.appendChild(p);
-    }
-    // Clean up after animation
-    setTimeout(() => { if (container) container.innerHTML = ""; }, 4000);
-  }
-
-  /* Confirm date — open WhatsApp */
-  function confirmDate() {
-    const dateVal = el("dateInput")?.value;
-    const timeVal = el("timeInput")?.value;
-    if (!dateVal) { alert("Please pick a date first 📅"); return; }
-    if (!timeVal) { alert("Please choose a time ⏰"); return; }
-
-    // Format date nicely
-    const d = new Date(dateVal + "T12:00:00");
-    const formatted = d.toLocaleDateString("en-KE", {
-      weekday: "long", year: "numeric", month: "long", day: "numeric"
+    // Clicking it also saves "no" and continues
+    btn.addEventListener('click', () => {
+      qAnswers[1] = "I'll be busy… 😬 (but she tried to catch it!)";
+      cancelAnimationFrame(bounceRAF);
+      btn.remove();
+      bouncingBtn = null;
+      // advance to Q3
+      el('q1').style.display = 'none';
+      el('q2').style.display = 'block';
+      const nd = el('dot2');
+      if (nd) { el('dot1').classList.remove('active'); el('dot1').classList.add('done'); nd.classList.add('active'); }
     });
 
+    function animate() {
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      const bw = btn.offsetWidth  || 160;
+      const bh = btn.offsetHeight || 50;
+
+      x += vx;
+      y += vy;
+
+      // Bounce off edges
+      if (x <= 10)        { x = 10;        vx = Math.abs(vx) + (Math.random() * 0.5); }
+      if (x >= W - bw - 10) { x = W - bw - 10; vx = -(Math.abs(vx) + (Math.random() * 0.5)); }
+      if (y <= 70)        { y = 70;        vy = Math.abs(vy) + (Math.random() * 0.5); }
+      if (y >= H - bh - 10) { y = H - bh - 10; vy = -(Math.abs(vy) + (Math.random() * 0.5)); }
+
+      // Cap speed so it doesn't get insane
+      vx = Math.sign(vx) * Math.min(Math.abs(vx), 7);
+      vy = Math.sign(vy) * Math.min(Math.abs(vy), 6);
+
+      btn.style.left = x + 'px';
+      btn.style.top  = y + 'px';
+
+      bounceRAF = requestAnimationFrame(animate);
+    }
+    bounceRAF = requestAnimationFrame(animate);
+  }
+
+  /* Confetti burst */
+  function spawnConfetti() {
+    const container = el('confetti');
+    if (!container) return;
+    const colors = ['#e8b84b','#c0392b','#fff','#f5d78e','#ff6b6b','#ffd700'];
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.cssText = `left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};--dur:${1.5+Math.random()*2}s;--delay:${Math.random()*1.5}s;width:${5+Math.random()*8}px;height:${5+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'};`;
+      container.appendChild(p);
+    }
+    setTimeout(() => { if (container) container.innerHTML = ''; }, 4500);
+  }
+
+  /* Confirm date — build WhatsApp message with ALL answers */
+  function confirmDate() {
+    const dateVal = el('dateInput')?.value;
+    const timeVal = el('timeInput')?.value;
+    if (!dateVal) { alert('Please pick a date first 📅'); return; }
+    if (!timeVal) { alert('Please choose a time ⏰'); return; }
+
+    const d = new Date(dateVal + 'T12:00:00');
+    const formatted = d.toLocaleDateString('en-KE', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    const a0 = qAnswers[0] || 'No answer';
+    const a1 = qAnswers[1] || 'No answer';
+
     const msg = encodeURIComponent(
-      `💕 YES Alovea! I'll go on a date with you!\n\n` +
-      `📅 Date: ${formatted}\n` +
+      `💕 Hey Alovea! I answered your questions!\n\n` +
+      `💍 Will you be my girl forever?\n   → ${a0}\n\n` +
+      `🎓 Will you attend my graduation?\n   → ${a1}\n\n` +
+      `🌹 Will you go on a date with me?\n   → YES! Let's go! 🌹\n\n` +
+      `📅 Our date: ${formatted}\n` +
       `⏰ Time: ${timeVal}\n\n` +
       `I can't wait! 🌹❤️`
     );
 
-    window.open(`https://wa.me/254714782090?text=${msg}`, "_blank");
+    window.open(`https://wa.me/254714782090?text=${msg}`, '_blank');
   }
+
+  /* runAway kept for backward compat but no longer used */
+  function runAway() {}
   /* ── PWA ── */
   function sw(){ if("serviceWorker"in navigator) navigator.serviceWorker.register("./service-worker.js").catch(()=>{}); }
   function pwaBtn(){ const btn=document.createElement("button");btn.id="installBtn";btn.textContent="📲 Install";btn.setAttribute("aria-label","Install app");document.body.appendChild(btn); if(window.matchMedia("(display-mode: standalone)").matches){btn.style.display="none";return;} window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();pwa=e;}); window.addEventListener("appinstalled",()=>{btn.style.display="none";pwa=null;}); btn.addEventListener("click",()=>{if(pwa){pwa.prompt();pwa.userChoice.then(()=>{pwa=null;btn.style.display="none"});}else{const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);alert(ios?"iPhone: tap Share → Add to Home Screen":"Android: tap ⋮ → Add to Home screen");}}); }

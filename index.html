@@ -206,67 +206,62 @@
       <!-- Progress dots -->
       <div class="q-progress">
         <span class="q-dot active" id="dot0"></span>
-        <span class="q-dot" id="dot1"></span>
-        <span class="q-dot" id="dot2"></span>
+        <span class="q-dot"        id="dot1"></span>
+        <span class="q-dot"        id="dot2"></span>
       </div>
 
-      <!-- Q1 -->
+      <!-- Q1: both YES and NO are real clickable buttons, answer is recorded -->
       <div class="q-card" id="q0">
         <div class="q-emoji">💍</div>
         <p class="q-text">Will you be my girl forever<br>and never leave again?</p>
         <div class="q-buttons">
-          <button class="q-yes" onclick="App.qAnswer(0)">YES, Always &amp; Forever 💕</button>
-          <button class="q-no runaway" id="noBtn0"
-            onmousemove="App.runAway(this,event)"
-            ontouchmove="App.runAway(this,event)">No… 💔</button>
+          <button class="q-yes"     onclick="App.qAnswer(0,'Yes, always &amp; forever 💕')">Yes, Always &amp; Forever 💕</button>
+          <button class="q-no-real" onclick="App.qAnswer(0,'No… 💔')">No… 💔</button>
         </div>
-        <p class="q-hint">Psst… one of these buttons has a mind of its own 😏</p>
       </div>
 
-      <!-- Q2 -->
+      <!-- Q2: YES is real, NO bounces around the full screen (spawned by JS) -->
       <div class="q-card" id="q1" style="display:none;">
         <div class="q-emoji">🎓</div>
         <p class="q-text">Will you attend<br>my graduation? 🎉</p>
         <div class="q-buttons">
-          <button class="q-yes" onclick="App.qAnswer(1)">I wouldn't miss it! 🎓💕</button>
-          <button class="q-no runaway" id="noBtn1"
-            onmousemove="App.runAway(this,event)"
-            ontouchmove="App.runAway(this,event)">I'll be busy… 😬</button>
+          <button class="q-yes" onclick="App.qAnswer(1,'I would not miss your graduation! 🎓💕')">I wouldn't miss it! 🎓💕</button>
         </div>
+        <p class="q-hint">Try to catch that other button… 😂</p>
       </div>
 
-      <!-- Q3 -->
+      <!-- Q3: YES opens date picker, NO is frozen and completely disabled -->
       <div class="q-card" id="q2" style="display:none;">
         <div class="q-emoji">🌹</div>
-        <p class="q-text">Will you go on a<br>romantic date with me? �</p>
+        <p class="q-text">Will you go on a<br>romantic date with me? ✨</p>
         <div class="q-buttons">
-          <button class="q-yes" onclick="App.qAnswer(2)">YES! Let's go! 🌹</button>
-          <button class="q-no frozen" id="noBtn2" disabled>Never �</button>
+          <button class="q-yes"       onclick="App.qAnswer(2,'YES! Let us go on a date! 🌹')">YES! Let's go! 🌹</button>
+          <button class="q-no-frozen" disabled>Never 🚫</button>
         </div>
-        <p class="q-hint">That button seems to be frozen… 🥶</p>
+        <p class="q-hint">That button seems… frozen 🥶</p>
       </div>
 
-      <!-- DATE PICKER (shown after Q3 yes) -->
+      <!-- DATE PICKER shown after Q3 YES -->
       <div id="datePicker" style="display:none;">
         <div class="date-celebration">
           <div class="date-confetti" id="confetti"></div>
-          <p class="date-emoji">🎉�🌹</p>
+          <p class="date-emoji">🎉💕🌹</p>
           <h3 class="date-title">She said YES!</h3>
           <p class="date-sub">Now pick our perfect date…</p>
           <div class="date-form">
             <input type="date" id="dateInput" class="date-input">
             <select id="timeInput" class="date-input">
               <option value="">Choose a time…</option>
-              <option value="Morning (9am - 12pm)">Morning ☀️ (9am – 12pm)</option>
-              <option value="Afternoon (1pm - 5pm)">Afternoon 🌤️ (1pm – 5pm)</option>
-              <option value="Evening (6pm - 9pm)">Evening 🌆 (6pm – 9pm)</option>
+              <option value="Morning (9am - 12pm)">Morning ☀️ (9am - 12pm)</option>
+              <option value="Afternoon (1pm - 5pm)">Afternoon 🌤️ (1pm - 5pm)</option>
+              <option value="Evening (6pm - 9pm)">Evening 🌆 (6pm - 9pm)</option>
               <option value="Night (after 7pm)">Night 🌙 (after 7pm)</option>
             </select>
             <button class="q-yes" onclick="App.confirmDate()" style="width:100%;margin-top:8px;">
-              💌 Send to Alovea
+              💌 Send to Alovea via WhatsApp
             </button>
           </div>
-          <p class="date-note">This will open WhatsApp with your answer �</p>
+          <p class="date-note">Opens WhatsApp with all your answers 💚</p>
         </div>
       </div>
 

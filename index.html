@@ -59,12 +59,27 @@
     <p class="login-subtitle">Our private love story 💕</p>
     <p class="login-quote">"You are my today and all of my tomorrows."</p>
     <div id="loginError" class="form-error"></div>
+
+    <!-- Biometric button — shown when fingerprint is registered -->
+    <div id="biometricSection" style="display:none;">
+      <button class="bio-btn" id="bioBtn" onclick="App.biometricLogin()">
+        <span class="bio-icon">👆</span>
+        <span class="bio-text">Use Fingerprint / Face ID</span>
+      </button>
+      <p class="bio-or">— or enter password —</p>
+    </div>
+
     <input type="text" id="loginUser" placeholder="Username" autocomplete="username" spellcheck="false">
     <div class="password-wrap">
       <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password">
       <button type="button" class="eye-btn" id="eyeBtn" onclick="App.togglePass()">👁️</button>
     </div>
     <button class="login-btn" onclick="App.login()">Enter Our World 💕</button>
+
+    <!-- Register biometric — shown after successful password login -->
+    <button id="registerBioBtn" class="register-bio-btn" style="display:none;" onclick="App.registerBiometric()">
+      🔐 Save Fingerprint for next time
+    </button>
   </div>
 </div>
 
@@ -291,7 +306,7 @@
 
       <div id="chatBox" style="display:none;" role="log" aria-live="polite"></div>
       <div id="typingStatus" style="display:none;"></div>
-      <div id="chatBlockedMsg" class="blocked-msg" style="display:none;">🚫 You have been restricted from chatting by admin</div>
+      <div id="chatBlockedMsg" class="blocked-msg" style="display:none;">it’s safe to chat with your favourite</div>
 
       <div class="chat-input" style="display:none;">
         <input type="text" id="chatInput" placeholder="Type a message ❤️" autocomplete="off">

@@ -59,6 +59,132 @@ const App = (() => {
   const detach=()=>{ refs.forEach(({ref,e,cb})=>ref.off(e,cb)); refs=[]; };
 
   /* ── LOGIN ── */
+
+  /* ── BIOMETRIC (WebAuthn) ──────────────────────────────────
+     How it works:
+     1. User logs in with password first time
+     2. "Save Fingerprint" button appears — tapping registers a
+        credential tied to their username on THIS device
+     3. Next visit: "Use Fingerprint" button shown — one tap
+        verifies biometric and logs them in
+     Credentials are stored ONLY on the device — never sent anywhere.
+  ───────────────────────────────────────────────────────────── */
+
+  const BIO_KEY = "aloeva_bio_user"; // localStorage key for registered username
+
+  function bioSupported() {
+    return !!(window.PublicKeyCredential &&
+              navigator.credentials &&
+              window.location.protocol === "https:");
+  }
+
+  function checkBioOnLoad() {
+    const registeredUser = localStorage.getItem(BIO_KEY);
+    if (!registeredUser || !bioSupported()) return;
+    // Show biometric button, pre-fill username
+    const sec = el("biometricSection");
+    if (sec) sec.style.display = "block";
+    const ui = el("loginUser");
+    if (ui) ui.value = registeredUser === "mr aloeva" ? "Mr Aloeva" : "Mrs Aloeva";
+  }
+
+  async function registerBiometric() {
+    if (!bioSupported()) {
+      err("Biometric not supported on this device/browser.");
+      return;
+    }
+    if (!WHO) return;
+
+    const btn = el("registerBioBtn");
+    if (btn) btn.textContent = "Registering…";
+
+    try {
+      // Create a credential tied to this username
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      const userId    = new TextEncoder().encode(WHO);
+
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge,
+          rp: { name: "Eva & Alovea", id: location.hostname },
+          user: { id: userId, name: WHO, displayName: ME.display },
+          pubKeyCredParams: [
+            { type: "public-key", alg: -7  },  // ES256
+            { type: "public-key", alg: -257 }  // RS256
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: "platform", // device biometric only
+            userVerification: "required"
+          },
+          timeout: 60000
+        }
+      });
+
+      // Save credential ID + username so we can verify next time
+      const credId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+      localStorage.setItem(BIO_KEY, WHO);
+      localStorage.setItem("aloeva_cred_id", credId);
+
+      if (btn) btn.style.display = "none";
+      err("✅ Fingerprint saved! Use it next time you log in.");
+      // Show bio button for next session awareness
+      const sec = el("biometricSection");
+      if (sec) sec.style.display = "block";
+
+    } catch (e) {
+      if (btn) btn.textContent = "🔐 Save Fingerprint for next time";
+      if (e.name === "NotAllowedError") {
+        err("Biometric cancelled. You can try again.");
+      } else {
+        err("Could not save fingerprint: " + e.message);
+      }
+    }
+  }
+
+  async function biometricLogin() {
+    if (!bioSupported()) { err("Biometric not supported."); return; }
+
+    const registeredUser = localStorage.getItem(BIO_KEY);
+    if (!registeredUser) { err("No fingerprint registered. Please login with password first."); return; }
+
+    const btn = el("bioBtn");
+    if (btn) {
+      btn.style.pointerEvents = "none";
+      btn.querySelector(".bio-text").textContent = "Verifying…";
+    }
+
+    try {
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          rpId: location.hostname,
+          userVerification: "required",
+          timeout: 60000
+        }
+      });
+
+      // Verification passed (device confirmed biometric) — log in
+      if (assertion) {
+        err("");
+        Session.save(registeredUser);
+        boot(registeredUser);
+      }
+
+    } catch (e) {
+      if (btn) {
+        btn.style.pointerEvents = "";
+        btn.querySelector(".bio-text").textContent = "Use Fingerprint / Face ID";
+      }
+      if (e.name === "NotAllowedError") {
+        err("Biometric cancelled or timed out.");
+      } else {
+        err("Biometric failed. Please use your password.");
+      }
+    }
+  }
+
   function login() {
     const u = (el("loginUser")?.value||"").trim().toLowerCase();
     const p =  el("loginPass")?.value||"";
@@ -68,6 +194,11 @@ const App = (() => {
     if (!user){ err("Unknown username. Use: Mr Aloeva or Mrs Aloeva"); return; }
     if (CryptoJS.SHA256(p).toString() !== user.hash){ err("Wrong password."); return; }
     Session.save(u);
+    // Show "Save fingerprint" button if biometric supported and not yet registered
+    if (bioSupported() && localStorage.getItem(BIO_KEY) !== u) {
+      const rb = el("registerBioBtn");
+      if (rb) rb.style.display = "flex";
+    }
     boot(u);
   }
 
@@ -622,6 +753,8 @@ const App = (() => {
 
   /* ── DOM READY ── */
   document.addEventListener("DOMContentLoaded",()=>{
+    // Check if biometric is registered for this device
+    checkBioOnLoad();
     // ── Splash → Login transition ──
     // Splash fades at 1.8s — show login at 2.1s
     setTimeout(() => {
@@ -648,5 +781,5 @@ const App = (() => {
     const lb=el("lightbox"); if(lb){ let sx=0; lb.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;},{passive:true}); lb.addEventListener("touchend",e=>{const dx=sx-e.changedTouches[0].clientX;if(dx>50)nextImg();if(dx<-50)prevImg();},{passive:true}); }
   });
 
-  return { login,logout,togglePass, go,toggleMusic,showPopup,closePopup,rate, openLightbox,closeLightbox,nextImg,prevImg, headerTap,openProfile,closeProfile,changePhoto, sendMsg, openAdmin,closeAdmin,adminTab,clearMsgs,setSetting, qAnswer,shyMove,runAway,confirmDate, setMood };
+  return { login,logout,togglePass, registerBiometric, biometricLogin, go,toggleMusic,showPopup,closePopup,rate, openLightbox,closeLightbox,nextImg,prevImg, headerTap,openProfile,closeProfile,changePhoto, sendMsg, openAdmin,closeAdmin,adminTab,clearMsgs,setSetting, qAnswer,shyMove,runAway,confirmDate, setMood };
 })();
